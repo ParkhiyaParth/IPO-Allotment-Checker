@@ -51,6 +51,21 @@ sudo cp deploy/ipo-backend.service /etc/systemd/system/ipo-backend.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now ipo-backend
 
+echo "== OS-level firewall (iptables) =="
+# Oracle's default Ubuntu image ships an iptables INPUT chain that only
+# accepts SSH (port 22) and rejects everything else — independent of
+# whatever the cloud console's Security List/NSG says. Both layers have to
+# allow 80/443, or Let's Encrypt's HTTP-01 challenge fails with
+# "Error getting validation data" and the cert never issues.
+if ! sudo iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null; then
+    sudo iptables -I INPUT 5 -p tcp --dport 80 -j ACCEPT
+fi
+if ! sudo iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null; then
+    sudo iptables -I INPUT 6 -p tcp --dport 443 -j ACCEPT
+fi
+sudo apt-get install -y iptables-persistent
+sudo netfilter-persistent save
+
 echo "== Caddy config =="
 echo "!! Edit backend/deploy/Caddyfile to put in this instance's real IP"
 echo "   (dashes instead of dots, e.g. 129-154-10-20.sslip.io), then run:"
@@ -62,9 +77,9 @@ echo "== Also required: Oracle Cloud Security List =="
 echo "In the OCI console, add Ingress Rules for this instance's subnet:"
 echo "  - 0.0.0.0/0 -> TCP port 80  (Let's Encrypt HTTP challenge)"
 echo "  - 0.0.0.0/0 -> TCP port 443 (HTTPS)"
-echo "The instance's own OS firewall (iptables/ufw) is separate from this"
-echo "and often the one people forget — Oracle blocks at the cloud network"
-echo "level regardless of what the OS firewall allows."
+echo "This script already opened the OS-level firewall (iptables) for the"
+echo "same two ports — Oracle blocks at the cloud network level independent"
+echo "of that, so both layers need it."
 
 echo ""
 echo "Done. Check status with: sudo systemctl status ipo-backend"

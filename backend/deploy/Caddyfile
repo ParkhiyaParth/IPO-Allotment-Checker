@@ -1,9 +1,8 @@
-# Replace PLACEHOLDER-IP-WITH-DASHES with the new instance's public IP,
-# dashes instead of dots (e.g. 129.154.10.20 -> 129-154-10-20). sslip.io
-# resolves that hostname straight back to the IP with no signup/DNS setup
-# needed, which is enough for Caddy to get a real Let's Encrypt certificate
-# — Let's Encrypt won't issue a cert for a bare IP address, so this is the
-# simplest way to get real HTTPS without owning a domain.
-PLACEHOLDER-IP-WITH-DASHES.sslip.io {
+# sslip.io resolves this hostname straight back to the IP embedded in it
+# (129-154-232-161 -> 129.154.232.161), no signup/DNS setup needed — enough
+# for Caddy to get a real Let's Encrypt certificate, since Let's Encrypt
+# won't issue one for a bare IP address. If this ever moves to a new
+# instance, swap the IP here (dashes instead of dots).
+129-154-232-161.sslip.io {
 	reverse_proxy 127.0.0.1:8000
 }
