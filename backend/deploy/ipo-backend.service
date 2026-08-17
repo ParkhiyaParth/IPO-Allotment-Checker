@@ -1,0 +1,19 @@
+[Unit]
+Description=IPO Allotment Checker backend
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/IPO-Allotment-Checker/backend
+ExecStart=/home/ubuntu/IPO-Allotment-Checker/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=3
+# Keep this small and predictable on a 1GB box — no worker pool, no
+# auto-reload; a crash just gets restarted by systemd.
+Environment=PYTHONUNBUFFERED=1
+
+# Binds to 127.0.0.1, not 0.0.0.0 — only Caddy (same host) talks to it
+# directly; the public internet only ever reaches Caddy on 443.
+[Install]
+WantedBy=multi-user.target

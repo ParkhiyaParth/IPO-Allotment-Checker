@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "IPO Allotment Checker",
+    "slug": "ipo-allotment-checker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.parthd.ipoallotmentchecker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.parthd.ipoallotmentchecker",
+      "adaptiveIcon": {
+        "backgroundColor": "#1E2A5E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#1E2A5E",
+          "defaultChannel": "ipo-alerts"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "96427c78-9a56-4baf-b554-c8d236a9dfdb"
+      }
+    },
+    "owner": "parthd",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/96427c78-9a56-4baf-b554-c8d236a9dfdb"
+    }
+  }
+}
