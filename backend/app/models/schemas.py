@@ -63,6 +63,7 @@ class IPOCatalogSummary(BaseModel):
     close_date: date | None = None
     price_band_low: float | None = None
     price_band_high: float | None = None
+    issue_price: float | None = None
     lot_size: int | None = None
     issue_size_cr: float | None = None
     gmp_value: float | None = None
@@ -70,6 +71,13 @@ class IPOCatalogSummary(BaseModel):
     listing_price: float | None = None
     current_price: float | None = None
     linked_registrar_ipo_id: str | None = None
+    # Per-lot profit: real (current_price - issue_price) * lot_size once
+    # listed, otherwise an *estimate* from GMP * lot_size -- GMP is an
+    # unofficial grey-market number, not a guarantee, so profit_basis lets
+    # the UI label the two very differently rather than presenting a
+    # speculative pre-listing number with the same confidence as a real one.
+    profit_per_lot: float | None = None
+    profit_basis: str | None = None  # "actual" | "estimated"
 
 
 class IPOCatalogDetail(IPOCatalogSummary):
