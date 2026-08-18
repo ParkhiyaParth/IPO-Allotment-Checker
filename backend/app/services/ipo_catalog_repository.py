@@ -19,7 +19,7 @@ _FIELDS = [
     "gmp_value", "gmp_percent", "gmp_updated_at",
     "sub_qib_offered", "sub_qib_applied", "sub_hni_offered", "sub_hni_applied",
     "sub_retail_offered", "sub_retail_applied", "sub_updated_at",
-    "listing_date", "listing_price", "current_price", "current_price_updated_at",
+    "boa_date", "listing_date", "listing_price", "current_price", "current_price_updated_at",
     "linked_registrar_ipo_id",
 ]
 
@@ -46,6 +46,7 @@ class CatalogRecord:
     sub_retail_offered: int | None = None
     sub_retail_applied: int | None = None
     sub_updated_at: str | None = None
+    boa_date: str | None = None
     listing_date: str | None = None
     listing_price: float | None = None
     current_price: float | None = None
@@ -90,6 +91,17 @@ def get_by_id(catalog_id: str) -> CatalogRecord | None:
     conn = get_connection()
     try:
         row = conn.execute("SELECT * FROM ipo_catalog WHERE id = ?", (catalog_id,)).fetchone()
+        return _row_to_record(row) if row else None
+    finally:
+        conn.close()
+
+
+def get_by_linked_registrar_id(registrar_ipo_id: str) -> CatalogRecord | None:
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT * FROM ipo_catalog WHERE linked_registrar_ipo_id = ? LIMIT 1", (registrar_ipo_id,)
+        ).fetchone()
         return _row_to_record(row) if row else None
     finally:
         conn.close()

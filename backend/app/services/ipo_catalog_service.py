@@ -65,6 +65,7 @@ async def refresh() -> int:
             company_name=row.company_name,
             open_date=row.open_date,
             close_date=row.close_date,
+            boa_date=row.boa_date,
             listing_date=row.listing_date,
             lot_size=row.lot_size,
             issue_size_cr=row.issue_size_cr,

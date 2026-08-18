@@ -47,6 +47,7 @@ class InvestorgainIpoRow:
     issue_size_cr: float | None = None
     open_date: str | None = None
     close_date: str | None = None
+    boa_date: str | None = None
     listing_date: str | None = None
 
 
@@ -78,6 +79,7 @@ def _parse_row(row: dict) -> InvestorgainIpoRow:
         issue_size_cr=issue_size_cr,
         open_date=row.get("~Srt_Open") or None,
         close_date=row.get("~Srt_Close") or None,
+        boa_date=row.get("~Srt_BoA_Dt") or None,
         listing_date=row.get("~Str_Listing") or None,
     )
 
