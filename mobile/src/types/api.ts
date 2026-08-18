@@ -37,6 +37,8 @@ export interface SubscriptionCategory {
   times: number | null;
 }
 
+export type ProfitBasis = 'actual' | 'estimated';
+
 export interface IPOCatalogSummary {
   id: string;
   company_name: string;
@@ -45,6 +47,7 @@ export interface IPOCatalogSummary {
   close_date: string | null;
   price_band_low: number | null;
   price_band_high: number | null;
+  issue_price: number | null;
   lot_size: number | null;
   issue_size_cr: number | null;
   gmp_value: number | null;
@@ -52,6 +55,8 @@ export interface IPOCatalogSummary {
   listing_price: number | null;
   current_price: number | null;
   linked_registrar_ipo_id: string | null;
+  profit_per_lot: number | null;
+  profit_basis: ProfitBasis | null;
 }
 
 export interface IPOCatalogDetail extends IPOCatalogSummary {

@@ -14,6 +14,11 @@ function fmt(value: string | number | null): string {
   return value == null ? '—' : String(value);
 }
 
+function formatProfit(value: number): string {
+  const rounded = Math.round(Math.abs(value));
+  return `${value < 0 ? '-' : '+'}₹${rounded.toLocaleString('en-IN')}`;
+}
+
 function SubscriptionRow({ label, category }: { label: string; category: SubscriptionCategory }) {
   return (
     <View style={styles.tableRow}>
@@ -34,8 +39,29 @@ export function IPODetailScreen({ route }: Props) {
     return <EmptyState icon="📡" title="Couldn't load IPO details" subtitle="Pull to refresh from the list." />;
   }
 
+  const profitColor =
+    data.profit_per_lot == null
+      ? colors.textSecondary
+      : data.profit_per_lot >= 0
+        ? colors.statusAllotted
+        : colors.statusNotAllotted;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {data.profit_per_lot != null ? (
+        <View style={[styles.profitCard, { backgroundColor: data.profit_per_lot >= 0 ? colors.statusAllottedBg : colors.statusNotAllottedBg }]}>
+          <Text style={[styles.profitCardLabel, { color: profitColor }]}>
+            {data.profit_basis === 'actual' ? 'PROFIT PER LOT' : 'ESTIMATED PROFIT PER LOT'}
+          </Text>
+          <Text style={[styles.profitCardValue, { color: profitColor }]}>{formatProfit(data.profit_per_lot)}</Text>
+          <Text style={styles.profitCardSubtitle}>
+            {data.profit_basis === 'actual'
+              ? 'Based on current market price vs. issue price'
+              : 'Based on grey market premium — not guaranteed'}
+          </Text>
+        </View>
+      ) : null}
+
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>IPO Details</Text>
         <View style={styles.fieldRow}>
@@ -53,6 +79,10 @@ export function IPODetailScreen({ route }: Props) {
               ? `₹${data.price_band_low} - ₹${data.price_band_high}`
               : '—'}
           </Text>
+        </View>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Issue Price</Text>
+          <Text style={styles.fieldValue}>{data.issue_price != null ? `₹${data.issue_price}` : '—'}</Text>
         </View>
         <View style={styles.fieldRow}>
           <Text style={styles.fieldLabel}>Lot Size</Text>
@@ -108,6 +138,15 @@ export function IPODetailScreen({ route }: Props) {
 
 const styles = StyleSheet.create({
   container: { padding: spacing.lg, backgroundColor: colors.background },
+  profitCard: {
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  profitCardLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
+  profitCardValue: { fontSize: 28, fontWeight: '800', marginTop: spacing.xs },
+  profitCardSubtitle: { fontSize: 12, color: colors.textSecondary, marginTop: spacing.xs, textAlign: 'center' },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,
