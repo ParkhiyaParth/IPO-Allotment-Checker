@@ -8,6 +8,11 @@ class Settings(BaseSettings):
     api_port: int = 8000
     http_timeout_seconds: float = 20.0
     cors_allow_origins: str = "*"
+    # Base64-encoded 32-byte AES-256 key for encrypting PANs at rest
+    # (device-scoped, opt-in zero-tap allotment discovery). Empty by default
+    # -- routes_device_pans.py returns 503 until this is set, rather than
+    # silently storing PANs unencrypted or refusing to start.
+    pan_encryption_key: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

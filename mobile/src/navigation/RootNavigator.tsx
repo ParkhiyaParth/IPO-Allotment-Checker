@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 import { AddEditPANScreen } from '../screens/AddEditPANScreen';
 import { AllotmentCheckScreen } from '../screens/AllotmentCheckScreen';
 import { AllotmentListScreen } from '../screens/AllotmentListScreen';
+import { DeviceSyncScreen } from '../screens/DeviceSyncScreen';
 import { FamilyPortfolioScreen } from '../screens/FamilyPortfolioScreen';
 import { IPODetailScreen } from '../screens/IPODetailScreen';
 import { IPOListScreen } from '../screens/IPOListScreen';
@@ -49,6 +50,11 @@ function PANsStackNavigator() {
         name="AddEditPAN"
         component={AddEditPANScreen}
         options={({ route }) => ({ title: route.params?.profileId ? 'Edit PAN' : 'Add PAN' })}
+      />
+      <PANsStack.Screen
+        name="DeviceSync"
+        component={DeviceSyncScreen}
+        options={{ title: 'Zero-Tap Allotment Check' }}
       />
     </PANsStack.Navigator>
   );

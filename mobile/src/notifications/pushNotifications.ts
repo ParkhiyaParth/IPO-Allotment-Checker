@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { registerPushToken } from '../api/push';
+import { getDeviceId } from '../storage/deviceId';
 
 const ANDROID_CHANNEL_ID = 'ipo-alerts';
 
@@ -47,7 +48,8 @@ export async function registerForPushNotifications(): Promise<void> {
     }
 
     const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-    await registerPushToken(token);
+    const deviceId = await getDeviceId();
+    await registerPushToken(token, deviceId);
   } catch {
     // Non-fatal — the app works fine without notifications; we'll just
     // retry registration next launch.

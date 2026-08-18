@@ -7,6 +7,7 @@ export type IPOsStackParamList = {
 export type PANsStackParamList = {
   PANList: undefined;
   AddEditPAN: { profileId: string } | undefined;
+  DeviceSync: undefined;
 };
 
 export type AllotmentStackParamList = {

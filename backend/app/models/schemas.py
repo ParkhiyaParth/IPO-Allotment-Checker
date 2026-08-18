@@ -47,6 +47,17 @@ class CheckAllotmentResponse(BaseModel):
 
 class RegisterPushTokenRequest(BaseModel):
     token: str = Field(pattern=r"^ExponentPushToken\[.+\]$")
+    device_id: str | None = None
+
+
+class DevicePanEntry(BaseModel):
+    id: str
+    label: str
+    pan: str = Field(pattern=PAN_PATTERN)
+
+
+class SyncDevicePansRequest(BaseModel):
+    pans: list[DevicePanEntry]
 
 
 class SubscriptionCategory(BaseModel):
