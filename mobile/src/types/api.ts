@@ -28,3 +28,41 @@ export interface CheckAllotmentResponse {
   results: AllotmentResultItem[];
   checked_at: string;
 }
+
+export type IPOCatalogStatus = 'open' | 'upcoming' | 'closed';
+
+export interface SubscriptionCategory {
+  offered: number | null;
+  applied: number | null;
+  times: number | null;
+}
+
+export interface IPOCatalogSummary {
+  id: string;
+  company_name: string;
+  status: IPOCatalogStatus;
+  open_date: string | null;
+  close_date: string | null;
+  price_band_low: number | null;
+  price_band_high: number | null;
+  lot_size: number | null;
+  issue_size_cr: number | null;
+  gmp_value: number | null;
+  gmp_percent: number | null;
+  listing_price: number | null;
+  current_price: number | null;
+  linked_registrar_ipo_id: string | null;
+}
+
+export interface IPOCatalogDetail extends IPOCatalogSummary {
+  listing_date: string | null;
+  gmp_updated_at: string | null;
+  subscription_qib: SubscriptionCategory;
+  subscription_hni: SubscriptionCategory;
+  subscription_retail: SubscriptionCategory;
+}
+
+export interface IPOCatalogListResponse {
+  ipos: IPOCatalogSummary[];
+  generated_at: string;
+}

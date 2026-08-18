@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import routes_allotment, routes_ipos, routes_push
 from app.config import settings
-from app.services import ipo_list_service
+from app.services import ipo_catalog_service, ipo_list_service
 from app.utils.http_client import close_http_client
 
 logger = logging.getLogger(__name__)
@@ -25,12 +25,24 @@ EVENING_WINDOW_START_HOUR = 17
 EVENING_CHECK_INTERVAL_SECONDS = 15 * 60
 OFF_HOURS_CHECK_INTERVAL_SECONDS = 2 * 60 * 60
 
+MARKET_HOURS_START_HOUR = 9
+MARKET_HOURS_END_HOUR = 17
+CATALOG_MARKET_HOURS_INTERVAL_SECONDS = 15 * 60
+CATALOG_OFF_HOURS_INTERVAL_SECONDS = 2 * 60 * 60
+
 
 def _next_refresh_delay_seconds() -> int:
     current_hour_ist = datetime.now(IST).hour
     if current_hour_ist >= EVENING_WINDOW_START_HOUR:
         return EVENING_CHECK_INTERVAL_SECONDS
     return OFF_HOURS_CHECK_INTERVAL_SECONDS
+
+
+def _next_catalog_refresh_delay_seconds() -> int:
+    current_hour_ist = datetime.now(IST).hour
+    if MARKET_HOURS_START_HOUR <= current_hour_ist < MARKET_HOURS_END_HOUR:
+        return CATALOG_MARKET_HOURS_INTERVAL_SECONDS
+    return CATALOG_OFF_HOURS_INTERVAL_SECONDS
 
 
 async def _periodic_refresh() -> None:
@@ -43,15 +55,31 @@ async def _periodic_refresh() -> None:
             logger.exception("IPO list refresh failed")
 
 
+async def _periodic_catalog_refresh() -> None:
+    while True:
+        await asyncio.sleep(_next_catalog_refresh_delay_seconds())
+        try:
+            ok_count = await ipo_catalog_service.refresh()
+            logger.info("IPO catalog refreshed (%d/2 sources reachable)", ok_count)
+        except Exception:
+            logger.exception("IPO catalog refresh failed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         await ipo_list_service.refresh()
     except Exception:
         logger.exception("Initial IPO list refresh failed")
+    try:
+        await ipo_catalog_service.refresh()
+    except Exception:
+        logger.exception("Initial IPO catalog refresh failed")
     refresh_task = asyncio.create_task(_periodic_refresh())
+    catalog_refresh_task = asyncio.create_task(_periodic_catalog_refresh())
     yield
     refresh_task.cancel()
+    catalog_refresh_task.cancel()
     await close_http_client()
 
 

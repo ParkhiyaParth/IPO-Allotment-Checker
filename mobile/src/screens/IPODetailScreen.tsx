@@ -1,135 +1,126 @@
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
-import { ResultRow } from '../components/ResultRow';
-import { useCheckAllotment } from '../hooks/useCheckAllotment';
-import { usePanProfiles } from '../hooks/usePanProfiles';
+import { SkeletonLoader } from '../components/SkeletonLoader';
+import { useIpoCatalogDetail } from '../hooks/useIpoCatalog';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import type { IPOsStackParamList } from '../navigation/types';
-import type { AllotmentResultItem } from '../types/api';
+import type { SubscriptionCategory } from '../types/api';
 
 type Props = NativeStackScreenProps<IPOsStackParamList, 'IPODetail'>;
 
-const REVEAL_DELAY_MS = 350;
+function fmt(value: string | number | null): string {
+  return value == null ? '—' : String(value);
+}
 
-export function IPODetailScreen({ route }: Props) {
-  const { ipoId, companyName } = route.params;
-  const { profiles, isLoading: profilesLoading } = usePanProfiles();
-  const { mutate, data, isError, error } = useCheckAllotment();
-  const [revealedCount, setRevealedCount] = useState(0);
-
-  useEffect(() => {
-    if (!profilesLoading && profiles.length > 0) {
-      setRevealedCount(0);
-      mutate({ ipoId, applicants: profiles });
-    }
-    // Re-run only when the set of saved PANs or the IPO changes, not on every mutate identity change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ipoId, profilesLoading, profiles.length]);
-
-  useEffect(() => {
-    if (!data) return;
-    if (revealedCount >= data.results.length) return;
-    const timer = setTimeout(() => setRevealedCount((c) => c + 1), REVEAL_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [data, revealedCount]);
-
-  const resultFor = (index: number): AllotmentResultItem | undefined => {
-    if (!data || index >= revealedCount) return undefined;
-    return data.results[index];
-  };
-
-  if (profilesLoading) return null;
-
-  if (profiles.length === 0) {
-    return (
-      <EmptyState
-        icon="🪪"
-        title="No PANs saved yet"
-        subtitle="Add a PAN under the My PANs tab to check allotment status."
-      />
-    );
-  }
-
+function SubscriptionRow({ label, category }: { label: string; category: SubscriptionCategory }) {
   return (
-    <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>{companyName}</Text>
-        {isError ? (
-          <Text style={styles.errorText}>{error?.message ?? 'Something went wrong.'}</Text>
-        ) : (
-          <Text style={styles.subtitle}>
-            Checking {profiles.length} saved PAN{profiles.length > 1 ? 's' : ''}
-          </Text>
-        )}
-      </View>
-
-      <ScrollView contentContainerStyle={styles.listContent}>
-        {profiles.map((profile, index) => (
-          <ResultRow
-            key={profile.id}
-            label={profile.name}
-            pan={profile.pan}
-            result={resultFor(index)}
-          />
-        ))}
-      </ScrollView>
-
-      {isError ? (
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={() => {
-            setRevealedCount(0);
-            mutate({ ipoId, applicants: profiles });
-          }}
-        >
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      ) : null}
+    <View style={styles.tableRow}>
+      <Text style={styles.tableCell}>{label}</Text>
+      <Text style={styles.tableCell}>{fmt(category.offered)}</Text>
+      <Text style={styles.tableCell}>{fmt(category.applied)}</Text>
+      <Text style={styles.tableCell}>{category.times != null ? `${category.times}x` : '—'}</Text>
     </View>
   );
 }
 
+export function IPODetailScreen({ route }: Props) {
+  const { ipoId } = route.params;
+  const { data, isLoading, isError } = useIpoCatalogDetail(ipoId);
+
+  if (isLoading) return <SkeletonLoader />;
+  if (isError || !data) {
+    return <EmptyState icon="📡" title="Couldn't load IPO details" subtitle="Pull to refresh from the list." />;
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>IPO Details</Text>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Open Date</Text>
+          <Text style={styles.fieldValue}>{fmt(data.open_date)}</Text>
+        </View>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Close Date</Text>
+          <Text style={styles.fieldValue}>{fmt(data.close_date)}</Text>
+        </View>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Price Band</Text>
+          <Text style={styles.fieldValue}>
+            {data.price_band_low != null && data.price_band_high != null
+              ? `₹${data.price_band_low} - ₹${data.price_band_high}`
+              : '—'}
+          </Text>
+        </View>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Lot Size</Text>
+          <Text style={styles.fieldValue}>{fmt(data.lot_size)}</Text>
+        </View>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Issue Size</Text>
+          <Text style={styles.fieldValue}>{data.issue_size_cr != null ? `₹${data.issue_size_cr} cr` : '—'}</Text>
+        </View>
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>GMP</Text>
+          <Text style={styles.fieldValue}>
+            {data.gmp_value != null
+              ? `${data.gmp_value}${data.gmp_percent != null ? ` (${data.gmp_percent.toFixed(0)}%)` : ''}`
+              : '—'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Subscription Details</Text>
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableCell, styles.tableHeaderCell]}>Category</Text>
+          <Text style={[styles.tableCell, styles.tableHeaderCell]}>Offered</Text>
+          <Text style={[styles.tableCell, styles.tableHeaderCell]}>Applied</Text>
+          <Text style={[styles.tableCell, styles.tableHeaderCell]}>Times</Text>
+        </View>
+        <SubscriptionRow label="QIB" category={data.subscription_qib} />
+        <SubscriptionRow label="HNI" category={data.subscription_hni} />
+        <SubscriptionRow label="Retail" category={data.subscription_retail} />
+      </View>
+
+      {data.status === 'closed' ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Listing</Text>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Listing Date</Text>
+            <Text style={styles.fieldValue}>{fmt(data.listing_date)}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Listing Price</Text>
+            <Text style={styles.fieldValue}>{data.listing_price != null ? `₹${data.listing_price}` : '—'}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Current Price</Text>
+            <Text style={styles.fieldValue}>{data.current_price != null ? `₹${data.current_price}` : '—'}</Text>
+          </View>
+        </View>
+      ) : null}
+    </ScrollView>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  headerRow: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  errorText: {
-    fontSize: 13,
-    color: colors.statusNotAllotted,
-    marginTop: spacing.xs,
-  },
-  listContent: {
-    paddingBottom: spacing.xl,
-  },
-  retryButton: {
-    margin: spacing.lg,
-    backgroundColor: colors.primary,
+  container: { padding: spacing.lg, backgroundColor: colors.background },
+  card: {
+    backgroundColor: colors.surface,
     borderRadius: 12,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  retryButtonText: {
-    color: colors.textOnPrimary,
-    fontWeight: '600',
-    fontSize: 15,
-  },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: spacing.md },
+  fieldRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
+  fieldLabel: { fontSize: 13, color: colors.textSecondary },
+  fieldValue: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+  tableRow: { flexDirection: 'row', paddingVertical: spacing.xs },
+  tableCell: { flex: 1, fontSize: 13, color: colors.textPrimary, textAlign: 'center' },
+  tableHeaderCell: { fontWeight: '700', color: colors.textSecondary },
 });
