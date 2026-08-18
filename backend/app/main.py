@@ -12,6 +12,15 @@ from app.config import settings
 from app.services import ipo_list_service
 from app.utils.http_client import close_http_client
 
+# Without this, INFO-level logger.info() calls anywhere in the app are
+# silently dropped — Python's logging module only auto-installs a fallback
+# handler for WARNING+, and uvicorn's own logging setup only configures its
+# own named loggers (uvicorn/uvicorn.access/uvicorn.error), never the root
+# logger our app's loggers propagate up to. Confirmed the hard way: several
+# logger.info() calls (including the /diagnostics endpoint) were reaching
+# this code path fine but never appearing anywhere.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
 logger = logging.getLogger(__name__)
 
 IST = ZoneInfo("Asia/Kolkata")
