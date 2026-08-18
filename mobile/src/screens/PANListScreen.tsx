@@ -2,6 +2,7 @@ import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { PANListItem } from '../components/PANListItem';
+import { useDevicePanSync } from '../hooks/useDevicePanSync';
 import { usePanProfiles } from '../hooks/usePanProfiles';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -11,6 +12,7 @@ type Props = NativeStackScreenProps<PANsStackParamList, 'PANList'>;
 
 export function PANListScreen({ navigation }: Props) {
   const { profiles, isLoading, removeProfile } = usePanProfiles();
+  const { isOptedIn } = useDevicePanSync();
 
   const confirmDelete = (id: string, name: string) => {
     Alert.alert('Remove PAN', `Remove ${name} from your saved list?`, [
@@ -22,9 +24,14 @@ export function PANListScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <View>
+        <View style={styles.headerTextColumn}>
           <Text style={styles.title}>My PANs</Text>
-          <Text style={styles.subtitle}>Saved on this device only</Text>
+          <Text style={styles.subtitle}>
+            {isOptedIn ? 'Saved on this device, synced for auto-check' : 'Saved on this device only'}
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('DeviceSync')} activeOpacity={0.7}>
+            <Text style={styles.syncLink}>Zero-Tap Auto-Check: {isOptedIn ? 'On' : 'Off'} →</Text>
+          </TouchableOpacity>
         </View>
         <TouchableOpacity
           style={styles.addButton}
@@ -70,7 +77,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
+    gap: spacing.sm,
   },
+  headerTextColumn: { flex: 1 },
   title: {
     fontSize: 24,
     fontWeight: '700',
@@ -80,6 +89,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  syncLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+    marginTop: spacing.sm,
   },
   addButton: {
     backgroundColor: colors.primary,

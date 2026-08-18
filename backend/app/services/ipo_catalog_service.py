@@ -14,6 +14,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from app.scrapers.market_data import investorgain_client, nse_client
 from app.services import (
+    auto_allotment_service,
     gmp_history_repository,
     ipo_catalog_repository,
     ipo_repository,
@@ -280,7 +281,9 @@ async def refresh() -> int:
     to_log_accuracy: list[SignalAccuracyEntry] = []
     to_notify_gmp_swing: list[tuple[CatalogRecord, float]] = []
     to_append_gmp_history: list[tuple[str, float]] = []
+    to_auto_check: list[str] = []
 
+    today_iso = date.today().isoformat()
     for record_id, record in records.items():
         existing = ipo_catalog_repository.get_by_id(record_id)
         status = compute_status(record.open_date, record.close_date, date.today())
@@ -338,6 +341,22 @@ async def refresh() -> int:
         else:
             record.gmp_momentum_alerted_at = prev_alerted_at
 
+        # Zero-tap allotment discovery: once a record's boa_date is reached,
+        # auto-check every opted-in device's saved PANs against this IPO's
+        # registrar exactly once (not every refresh cycle while it stays
+        # "today or earlier").
+        prev_auto_checked = existing.auto_checked_boa if existing else ""
+        if (
+            record.boa_date
+            and record.boa_date <= today_iso
+            and prev_auto_checked != "yes"
+            and record.linked_registrar_ipo_id
+        ):
+            record.auto_checked_boa = "yes"
+            to_auto_check.append(record.linked_registrar_ipo_id)
+        else:
+            record.auto_checked_boa = prev_auto_checked
+
     if records:
         ipo_catalog_repository.upsert_many(list(records.values()))
 
@@ -352,6 +371,9 @@ async def refresh() -> int:
 
     for record, swing in to_notify_gmp_swing:
         await push_service.notify_gmp_momentum(record.company_name, swing, record.gmp_percent or 0.0)
+
+    for registrar_ipo_id in to_auto_check:
+        await auto_allotment_service.run_auto_checks_for_ipo(registrar_ipo_id)
 
     return ok_count
 

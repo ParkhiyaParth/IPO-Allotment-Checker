@@ -7,6 +7,8 @@ to Expo with the recipient's Expo push token.
 
 import logging
 
+from app.models.enums import AllotmentStatus
+from app.scrapers.registrars.base import AllotmentResult
 from app.services import push_token_repository
 from app.utils.http_client import get_http_client
 
@@ -45,11 +47,40 @@ async def notify_gmp_momentum(company_name: str, swing_percent: float, current_p
     await _send_to_all(title, body)
 
 
+async def notify_allotment_result(device_id: str, company_name: str, result: AllotmentResult) -> None:
+    """Personal result -- must go ONLY to the device that owns this PAN,
+    never broadcast like the other notify_* functions in this module."""
+    if result.status == AllotmentStatus.ALLOTTED:
+        title = f"Allotted: {company_name}"
+        body = (
+            f"You got {result.shares_allotted} shares." if result.shares_allotted else "Check the app for details."
+        )
+    elif result.status == AllotmentStatus.NOT_ALLOTTED:
+        title = f"Not allotted: {company_name}"
+        body = "Better luck next time."
+    else:
+        # CHECK_FAILED / NOT_APPLIED aren't actionable enough to push
+        # unattended -- the device's next manual check will surface them.
+        return
+
+    await _send_to_device(device_id, title, body)
+
+
+async def _send_to_device(device_id: str, title: str, body: str) -> None:
+    tokens = push_token_repository.get_by_device_id(device_id)
+    if not tokens:
+        return
+    await _send(tokens, title, body)
+
+
 async def _send_to_all(title: str, body: str) -> None:
     tokens = push_token_repository.get_all()
     if not tokens:
         return
+    await _send(tokens, title, body)
 
+
+async def _send(tokens: list[str], title: str, body: str) -> None:
     client = get_http_client()
     for i in range(0, len(tokens), _BATCH_SIZE):
         batch = tokens[i : i + _BATCH_SIZE]

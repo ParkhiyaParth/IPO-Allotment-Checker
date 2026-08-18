@@ -21,6 +21,7 @@ _FIELDS = [
     "sub_retail_offered", "sub_retail_applied", "sub_updated_at",
     "boa_date", "listing_date", "listing_price", "current_price", "current_price_updated_at",
     "linked_registrar_ipo_id", "notified_apply_signal", "signal_accuracy_logged", "gmp_momentum_alerted_at",
+    "auto_checked_boa",
 ]
 
 
@@ -56,6 +57,7 @@ class CatalogRecord:
     notified_apply_signal: str = ""
     signal_accuracy_logged: str = ""
     gmp_momentum_alerted_at: str = ""
+    auto_checked_boa: str = ""
     first_seen_at: str = ""
     last_seen_at: str = ""
 
