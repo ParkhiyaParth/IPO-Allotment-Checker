@@ -78,6 +78,11 @@ class IPOCatalogSummary(BaseModel):
     # speculative pre-listing number with the same confidence as a real one.
     profit_per_lot: float | None = None
     profit_basis: str | None = None  # "actual" | "estimated"
+    # Rule-based "should I apply" heuristic from GMP + subscription +
+    # issue size -- fully explainable, not a black-box prediction, and
+    # explicitly not investment advice (see ipo_catalog_service.compute_apply_signal).
+    apply_signal: str | None = None  # "strong_apply" | "consider" | "skip"
+    apply_signal_reason: str | None = None
 
 
 class IPOCatalogDetail(IPOCatalogSummary):

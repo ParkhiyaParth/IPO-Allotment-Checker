@@ -20,7 +20,7 @@ _FIELDS = [
     "sub_qib_offered", "sub_qib_applied", "sub_hni_offered", "sub_hni_applied",
     "sub_retail_offered", "sub_retail_applied", "sub_updated_at",
     "boa_date", "listing_date", "listing_price", "current_price", "current_price_updated_at",
-    "linked_registrar_ipo_id",
+    "linked_registrar_ipo_id", "notified_apply_signal",
 ]
 
 
@@ -53,6 +53,7 @@ class CatalogRecord:
     current_price: float | None = None
     current_price_updated_at: str | None = None
     linked_registrar_ipo_id: str | None = None
+    notified_apply_signal: str = ""
     first_seen_at: str = ""
     last_seen_at: str = ""
 

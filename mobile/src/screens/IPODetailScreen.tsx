@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -6,7 +6,8 @@ import { useIpoCatalogDetail } from '../hooks/useIpoCatalog';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import type { IPOsStackParamList } from '../navigation/types';
-import type { SubscriptionCategory } from '../types/api';
+import type { ApplySignal, SubscriptionCategory } from '../types/api';
+import { brokerLabel, openBrokerApp } from '../utils/brokerLinks';
 
 type Props = NativeStackScreenProps<IPOsStackParamList, 'IPODetail'>;
 
@@ -17,6 +18,31 @@ function fmt(value: string | number | null): string {
 function formatProfit(value: number): string {
   const rounded = Math.round(Math.abs(value));
   return `${value < 0 ? '-' : '+'}₹${rounded.toLocaleString('en-IN')}`;
+}
+
+const APPLY_SIGNAL_LABELS: Record<ApplySignal, string> = {
+  strong_apply: '🚀 Strong Apply',
+  consider: 'Consider',
+  skip: 'Skip',
+};
+
+function applySignalPalette(signal: ApplySignal) {
+  if (signal === 'strong_apply') return { bg: colors.statusAllottedBg, fg: colors.statusAllotted };
+  if (signal === 'consider') return { bg: colors.statusCheckFailedBg, fg: colors.statusCheckFailed };
+  return { bg: colors.statusNotAppliedBg, fg: colors.statusNotApplied };
+}
+
+function promptBrokerChoice(companyName: string, reason: string | null) {
+  const disclaimer =
+    (reason ? `${reason}. ` : '') +
+    'This is an unofficial estimate from GMP and subscription data, not investment advice. ' +
+    "You'll still need to apply and approve the UPI mandate yourself in your broker app.";
+
+  Alert.alert(`Apply for ${companyName}?`, disclaimer, [
+    { text: brokerLabel('angel_one'), onPress: () => openBrokerApp('angel_one') },
+    { text: brokerLabel('groww'), onPress: () => openBrokerApp('groww') },
+    { text: 'Cancel', style: 'cancel' },
+  ]);
 }
 
 function SubscriptionRow({ label, category }: { label: string; category: SubscriptionCategory }) {
@@ -59,6 +85,28 @@ export function IPODetailScreen({ route }: Props) {
               ? 'Based on current market price vs. issue price'
               : 'Based on grey market premium — not guaranteed'}
           </Text>
+        </View>
+      ) : null}
+
+      {data.apply_signal != null ? (
+        <View style={[styles.applyCard, { backgroundColor: applySignalPalette(data.apply_signal).bg }]}>
+          <View style={styles.applyCardText}>
+            <Text style={[styles.applyCardLabel, { color: applySignalPalette(data.apply_signal).fg }]}>
+              {APPLY_SIGNAL_LABELS[data.apply_signal]}
+            </Text>
+            {data.apply_signal_reason ? (
+              <Text style={styles.applyCardReason}>{data.apply_signal_reason}</Text>
+            ) : null}
+          </View>
+          {data.apply_signal === 'strong_apply' ? (
+            <TouchableOpacity
+              style={styles.applyNowButton}
+              onPress={() => promptBrokerChoice(data.company_name, data.apply_signal_reason)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.applyNowButtonText}>APPLY NOW</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
 
@@ -147,6 +195,25 @@ const styles = StyleSheet.create({
   profitCardLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
   profitCardValue: { fontSize: 28, fontWeight: '800', marginTop: spacing.xs },
   profitCardSubtitle: { fontSize: 12, color: colors.textSecondary, marginTop: spacing.xs, textAlign: 'center' },
+  applyCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  applyCardText: { flex: 1 },
+  applyCardLabel: { fontSize: 14, fontWeight: '800', letterSpacing: 0.3 },
+  applyCardReason: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  applyNowButton: {
+    backgroundColor: colors.statusAllotted,
+    borderRadius: 8,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  applyNowButtonText: { color: colors.textOnPrimary, fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,

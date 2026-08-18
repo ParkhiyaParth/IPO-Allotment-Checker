@@ -38,6 +38,7 @@ export interface SubscriptionCategory {
 }
 
 export type ProfitBasis = 'actual' | 'estimated';
+export type ApplySignal = 'strong_apply' | 'consider' | 'skip';
 
 export interface IPOCatalogSummary {
   id: string;
@@ -57,6 +58,8 @@ export interface IPOCatalogSummary {
   linked_registrar_ipo_id: string | null;
   profit_per_lot: number | null;
   profit_basis: ProfitBasis | null;
+  apply_signal: ApplySignal | null;
+  apply_signal_reason: string | null;
 }
 
 export interface IPOCatalogDetail extends IPOCatalogSummary {

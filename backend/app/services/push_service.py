@@ -21,16 +21,27 @@ async def notify_new_ipos(company_names: list[str]) -> None:
     if not company_names:
         return
 
-    tokens = push_token_repository.get_all()
-    if not tokens:
-        return
-
     if len(company_names) == 1:
         title = "IPO allotment is out"
         body = f"{company_names[0]} — check your PANs now."
     else:
         title = f"{len(company_names)} new IPO allotments are out"
         body = ", ".join(company_names[:3]) + ("…" if len(company_names) > 3 else "")
+
+    await _send_to_all(title, body)
+
+
+async def notify_apply_signal(company_name: str, reason: str, close_date: str | None) -> None:
+    title = f"Strong apply signal: {company_name}"
+    deadline = f" Closes {close_date}." if close_date else ""
+    body = f"{reason}.{deadline} Unofficial estimate, not investment advice."
+    await _send_to_all(title, body)
+
+
+async def _send_to_all(title: str, body: str) -> None:
+    tokens = push_token_repository.get_all()
+    if not tokens:
+        return
 
     client = get_http_client()
     for i in range(0, len(tokens), _BATCH_SIZE):
