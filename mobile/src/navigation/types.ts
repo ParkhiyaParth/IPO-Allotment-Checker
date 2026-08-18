@@ -8,3 +8,8 @@ export type PANsStackParamList = {
   PANList: undefined;
   AddEditPAN: { profileId: string } | undefined;
 };
+
+export type AllotmentStackParamList = {
+  AllotmentList: undefined;
+  AllotmentCheck: { ipoId: string; companyName: string };
+};

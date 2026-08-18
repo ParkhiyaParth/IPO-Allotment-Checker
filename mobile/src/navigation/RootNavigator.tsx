@@ -4,14 +4,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text } from 'react-native';
 import { AddEditPANScreen } from '../screens/AddEditPANScreen';
 import { AllotmentCheckScreen } from '../screens/AllotmentCheckScreen';
+import { AllotmentListScreen } from '../screens/AllotmentListScreen';
 import { IPODetailScreen } from '../screens/IPODetailScreen';
 import { IPOListScreen } from '../screens/IPOListScreen';
 import { PANListScreen } from '../screens/PANListScreen';
 import { colors } from '../theme/colors';
-import type { IPOsStackParamList, PANsStackParamList } from './types';
+import type { AllotmentStackParamList, IPOsStackParamList, PANsStackParamList } from './types';
 
 const IPOsStack = createNativeStackNavigator<IPOsStackParamList>();
 const PANsStack = createNativeStackNavigator<PANsStackParamList>();
+const AllotmentStack = createNativeStackNavigator<AllotmentStackParamList>();
 const Tab = createBottomTabNavigator();
 
 const stackHeaderOptions = {
@@ -51,6 +53,23 @@ function PANsStackNavigator() {
   );
 }
 
+function AllotmentStackNavigator() {
+  return (
+    <AllotmentStack.Navigator screenOptions={stackHeaderOptions}>
+      <AllotmentStack.Screen
+        name="AllotmentList"
+        component={AllotmentListScreen}
+        options={{ title: 'Check Allotment' }}
+      />
+      <AllotmentStack.Screen
+        name="AllotmentCheck"
+        component={AllotmentCheckScreen}
+        options={({ route }) => ({ title: route.params.companyName })}
+      />
+    </AllotmentStack.Navigator>
+  );
+}
+
 export function RootNavigator() {
   return (
     <NavigationContainer>
@@ -67,6 +86,14 @@ export function RootNavigator() {
           options={{
             title: 'IPOs',
             tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📈</Text>,
+          }}
+        />
+        <Tab.Screen
+          name="AllotmentTab"
+          component={AllotmentStackNavigator}
+          options={{
+            title: 'Allotment',
+            tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>✅</Text>,
           }}
         />
         <Tab.Screen
