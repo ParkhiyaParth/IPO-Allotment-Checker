@@ -38,6 +38,13 @@ async def notify_apply_signal(company_name: str, reason: str, close_date: str | 
     await _send_to_all(title, body)
 
 
+async def notify_gmp_momentum(company_name: str, swing_percent: float, current_percent: float) -> None:
+    direction = "jumped" if swing_percent > 0 else "dropped"
+    title = f"GMP {direction}: {company_name}"
+    body = f"GMP moved {swing_percent:+.0f} pts to {current_percent:.0f}% recently."
+    await _send_to_all(title, body)
+
+
 async def _send_to_all(title: str, body: str) -> None:
     tokens = push_token_repository.get_all()
     if not tokens:

@@ -1,14 +1,26 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { IPOListItem } from '../components/IPOListItem';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { useApplySignalTrackRecord } from '../hooks/useIpoCatalog';
 import { useRecentIpos } from '../hooks/useRecentIpos';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import type { AllotmentStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<AllotmentStackParamList, 'AllotmentList'>;
+
+function TrackRecordStat() {
+  const { data } = useApplySignalTrackRecord();
+  if (!data || data.total === 0 || data.hit_rate == null) return null;
+
+  return (
+    <Text style={styles.trackRecord}>
+      Apply-signal accuracy so far: {Math.round(data.hit_rate * 100)}% ({data.correct}/{data.total} closed IPOs)
+    </Text>
+  );
+}
 
 export function AllotmentListScreen({ navigation }: Props) {
   const { data, isLoading, isError, refetch, isRefetching } = useRecentIpos();
@@ -18,6 +30,10 @@ export function AllotmentListScreen({ navigation }: Props) {
       <View style={styles.headerRow}>
         <Text style={styles.title}>Check Allotment</Text>
         <Text style={styles.subtitle}>Recent IPOs with allotment out · tap to check all your PANs</Text>
+        <TrackRecordStat />
+        <TouchableOpacity onPress={() => navigation.navigate('FamilyPortfolio')} activeOpacity={0.7}>
+          <Text style={styles.portfolioLink}>View Family Portfolio →</Text>
+        </TouchableOpacity>
       </View>
 
       {isLoading ? (
@@ -69,6 +85,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  trackRecord: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+    marginTop: spacing.sm,
+  },
+  portfolioLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+    marginTop: spacing.sm,
   },
   listContent: {
     paddingBottom: spacing.xl,

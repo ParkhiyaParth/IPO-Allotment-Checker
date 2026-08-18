@@ -23,7 +23,7 @@ export function AllotmentCheckScreen({ route }: Props) {
   useEffect(() => {
     if (!profilesLoading && profiles.length > 0) {
       setRevealedCount(0);
-      mutate({ ipoId, applicants: profiles });
+      mutate({ ipoId, companyName, applicants: profiles });
     }
     // Re-run only when the set of saved PANs or the IPO changes, not on every mutate identity change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,7 +82,7 @@ export function AllotmentCheckScreen({ route }: Props) {
           style={styles.retryButton}
           onPress={() => {
             setRevealedCount(0);
-            mutate({ ipoId, applicants: profiles });
+            mutate({ ipoId, companyName, applicants: profiles });
           }}
         >
           <Text style={styles.retryButtonText}>Retry</Text>

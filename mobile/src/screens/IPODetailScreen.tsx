@@ -1,6 +1,7 @@
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
+import { GmpSparkline } from '../components/GmpSparkline';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useIpoCatalogDetail } from '../hooks/useIpoCatalog';
 import { colors } from '../theme/colors';
@@ -142,12 +143,21 @@ export function IPODetailScreen({ route }: Props) {
         </View>
         <View style={styles.fieldRow}>
           <Text style={styles.fieldLabel}>GMP</Text>
-          <Text style={styles.fieldValue}>
-            {data.gmp_value != null
-              ? `${data.gmp_value}${data.gmp_percent != null ? ` (${data.gmp_percent.toFixed(0)}%)` : ''}`
-              : '—'}
-          </Text>
+          <View style={styles.gmpValueColumn}>
+            <Text style={styles.fieldValue}>
+              {data.gmp_value != null
+                ? `${data.gmp_value}${data.gmp_percent != null ? ` (${data.gmp_percent.toFixed(0)}%)` : ''}`
+                : '—'}
+            </Text>
+            <GmpSparkline trend={data.gmp_trend} />
+          </View>
         </View>
+        {data.retail_allotment_probability != null ? (
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Est. allotment odds</Text>
+            <Text style={styles.fieldValue}>{Math.round(data.retail_allotment_probability * 100)}% (approx.)</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.card}>
@@ -226,6 +236,7 @@ const styles = StyleSheet.create({
   fieldRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
   fieldLabel: { fontSize: 13, color: colors.textSecondary },
   fieldValue: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+  gmpValueColumn: { alignItems: 'flex-end' },
   tableRow: { flexDirection: 'row', paddingVertical: spacing.xs },
   tableCell: { flex: 1, fontSize: 13, color: colors.textPrimary, textAlign: 'center' },
   tableHeaderCell: { fontWeight: '700', color: colors.textSecondary },

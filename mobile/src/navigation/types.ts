@@ -12,4 +12,5 @@ export type PANsStackParamList = {
 export type AllotmentStackParamList = {
   AllotmentList: undefined;
   AllotmentCheck: { ipoId: string; companyName: string };
+  FamilyPortfolio: undefined;
 };

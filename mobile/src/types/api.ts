@@ -60,6 +60,8 @@ export interface IPOCatalogSummary {
   profit_basis: ProfitBasis | null;
   apply_signal: ApplySignal | null;
   apply_signal_reason: string | null;
+  retail_allotment_probability: number | null;
+  gmp_trend: (number | null)[] | null;
 }
 
 export interface IPOCatalogDetail extends IPOCatalogSummary {
@@ -73,4 +75,17 @@ export interface IPOCatalogDetail extends IPOCatalogSummary {
 export interface IPOCatalogListResponse {
   ipos: IPOCatalogSummary[];
   generated_at: string;
+}
+
+export interface SignalAccuracyBucket {
+  total: number;
+  correct: number;
+  hit_rate: number | null;
+}
+
+export interface TrackRecordResponse {
+  total: number;
+  correct: number;
+  hit_rate: number | null;
+  by_signal: Record<string, SignalAccuracyBucket>;
 }

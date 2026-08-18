@@ -8,9 +8,11 @@ from app.models.schemas import (
     IPOCatalogSummary,
     IPOSummary,
     RecentIposResponse,
+    SignalAccuracyBucket,
     SubscriptionCategory,
+    TrackRecordResponse,
 )
-from app.services import ipo_catalog_service, ipo_list_service
+from app.services import gmp_history_repository, ipo_catalog_service, ipo_list_service, signal_accuracy_repository
 from app.services.ipo_catalog_repository import CatalogRecord
 
 router = APIRouter(prefix="/ipos", tags=["ipos"])
@@ -49,6 +51,13 @@ def _profit_per_lot(record: CatalogRecord) -> tuple[float | None, str | None]:
     return None, None
 
 
+def _gmp_trend(catalog_id: str) -> list[float | None] | None:
+    samples = gmp_history_repository.get_recent(catalog_id)  # newest first
+    if not samples:
+        return None
+    return [s.gmp_percent for s in reversed(samples)]  # oldest -> newest
+
+
 def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
     profit_per_lot, profit_basis = _profit_per_lot(record)
     apply_signal, apply_signal_reason = ipo_catalog_service.compute_apply_signal(record)
@@ -72,6 +81,8 @@ def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
         profit_basis=profit_basis,
         apply_signal=apply_signal,
         apply_signal_reason=apply_signal_reason,
+        retail_allotment_probability=ipo_catalog_service.compute_retail_allotment_probability(record),
+        gmp_trend=_gmp_trend(record.id),
     )
 
 
@@ -112,6 +123,19 @@ async def get_ipo_catalog_detail(catalog_id: str) -> IPOCatalogDetail:
             applied=record.sub_retail_applied,
             times=(record.sub_retail_applied / record.sub_retail_offered) if record.sub_retail_offered else None,
         ),
+    )
+
+
+@router.get("/apply-signal/track-record", response_model=TrackRecordResponse)
+async def get_apply_signal_track_record() -> TrackRecordResponse:
+    # Declared before /{ipo_id} so "apply-signal" is matched as a literal
+    # path segment here rather than swallowed as an ipo_id by that route.
+    stats = signal_accuracy_repository.get_stats()
+    return TrackRecordResponse(
+        total=stats["total"],
+        correct=stats["correct"],
+        hit_rate=stats["hit_rate"],
+        by_signal={k: SignalAccuracyBucket(**v) for k, v in stats["by_signal"].items()},
     )
 
 

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchIpoCatalog, fetchIpoCatalogDetail } from '../api/ipoCatalog';
+import { fetchApplySignalTrackRecord, fetchIpoCatalog, fetchIpoCatalogDetail } from '../api/ipoCatalog';
 import type { IPOCatalogStatus } from '../types/api';
 
 // The backend itself only re-scrapes every 15min-2h (see main.py), but
@@ -21,5 +21,12 @@ export function useIpoCatalogDetail(ipoId: string) {
     queryKey: ['ipos', 'catalog', 'detail', ipoId],
     queryFn: () => fetchIpoCatalogDetail(ipoId),
     refetchInterval: LIVE_REFETCH_INTERVAL_MS,
+  });
+}
+
+export function useApplySignalTrackRecord() {
+  return useQuery({
+    queryKey: ['ipos', 'applySignal', 'trackRecord'],
+    queryFn: fetchApplySignalTrackRecord,
   });
 }
