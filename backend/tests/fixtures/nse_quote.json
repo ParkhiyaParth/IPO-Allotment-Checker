@@ -1,0 +1,15 @@
+{
+  "_source": "NOT a live NSE capture. api/quote-equity (and even a bare GET of https://www.nseindia.com/) returned a persistent Akamai edge 403 'Access Denied' in the task-5 dev environment, reproducible across a plain browser-UA request, a cookie-primed request (GET / then replay cookies), and multiple retries -- unlike api/ipo-current-issue and api/ipo-active-category, which both returned real JSON with no cookies at all. This shape is reconstructed from NSE's publicly documented quote-equity schema (used by numerous independent open-source NSE scraper projects) purely so the parser has something concrete to exercise; treat priceInfo.lastPrice as a best-effort guess about field naming, not a confirmed-live fact, until someone can capture this endpoint for real from an unblocked network.",
+  "info": {
+    "symbol": "RELIANCE",
+    "companyName": "Reliance Industries Limited",
+    "industry": "Petroleum Products"
+  },
+  "priceInfo": {
+    "lastPrice": 2945.6,
+    "change": 12.35,
+    "pChange": 0.42,
+    "previousClose": 2933.25,
+    "open": 2938.0
+  }
+}
