@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522994524998",
+    "project_id": "ipo-allotement-checker",
+    "storage_bucket": "ipo-allotement-checker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522994524998:android:a1051a0b67a60497aebb47",
+        "android_client_info": {
+          "package_name": "com.parthd.ipoallotmentchecker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5ejMp7ROYUSqkFd8rsQjj6G0KqdvMpgA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

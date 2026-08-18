@@ -15,6 +15,7 @@
     },
     "android": {
       "package": "com.parthd.ipoallotmentchecker",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1E2A5E",
         "foregroundImage": "./assets/android-icon-foreground.png",
