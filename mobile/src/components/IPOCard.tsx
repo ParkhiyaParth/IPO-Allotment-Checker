@@ -3,6 +3,7 @@ import { colors } from '../theme/colors';
 import { radii, spacing } from '../theme/spacing';
 import type { ApplySignal, IPOCatalogStatus, IPOCatalogSummary } from '../types/api';
 import { brokerLabel, openBrokerApp } from '../utils/brokerLinks';
+import { GmpSparkline } from './GmpSparkline';
 
 function formatDate(isoDate: string | null): string {
   if (!isoDate) return '—';
@@ -174,9 +175,19 @@ export function IPOCard({
       </View>
 
       <View style={styles.row}>
-        <Text style={styles.fieldLabel}>GMP</Text>
-        <Text style={[styles.gmpValue, { color: gmpColor }]}>{formatGmp(ipo.gmp_value, ipo.gmp_percent)}</Text>
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>GMP</Text>
+          <Text style={[styles.gmpValue, { color: gmpColor }]}>{formatGmp(ipo.gmp_value, ipo.gmp_percent)}</Text>
+        </View>
+        <GmpSparkline trend={ipo.gmp_trend} />
       </View>
+
+      {ipo.retail_allotment_probability != null ? (
+        <View style={styles.row}>
+          <Text style={styles.fieldLabel}>Est. allotment odds (approx.)</Text>
+          <Text style={styles.fieldValue}>{Math.round(ipo.retail_allotment_probability * 100)}%</Text>
+        </View>
+      ) : null}
 
       {showPriceComparison ? (
         <View style={styles.row}>

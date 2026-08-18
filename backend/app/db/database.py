@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS ipo_catalog (
     current_price_updated_at TEXT,
     linked_registrar_ipo_id TEXT,
     notified_apply_signal TEXT NOT NULL DEFAULT '',
+    signal_accuracy_logged TEXT NOT NULL DEFAULT '',
+    gmp_momentum_alerted_at TEXT NOT NULL DEFAULT '',
     first_seen_at TEXT NOT NULL,
     last_seen_at TEXT NOT NULL
 );
@@ -52,6 +54,22 @@ CREATE TABLE IF NOT EXISTS push_tokens (
     token TEXT PRIMARY KEY,
     registered_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS signal_accuracy_log (
+    catalog_id TEXT PRIMARY KEY,
+    company_name TEXT NOT NULL,
+    signal_at_close TEXT NOT NULL,
+    was_profitable INTEGER NOT NULL,
+    logged_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS gmp_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    catalog_id TEXT NOT NULL,
+    gmp_percent REAL,
+    recorded_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_gmp_history_catalog_id ON gmp_history(catalog_id, recorded_at);
 """
 
 
@@ -74,6 +92,14 @@ def get_connection() -> sqlite3.Connection:
         pass  # column already exists (pre-existing cache file from before this migration)
     try:
         conn.execute("ALTER TABLE ipo_catalog ADD COLUMN notified_apply_signal TEXT NOT NULL DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass  # column already exists (pre-existing cache file from before this migration)
+    try:
+        conn.execute("ALTER TABLE ipo_catalog ADD COLUMN signal_accuracy_logged TEXT NOT NULL DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass  # column already exists (pre-existing cache file from before this migration)
+    try:
+        conn.execute("ALTER TABLE ipo_catalog ADD COLUMN gmp_momentum_alerted_at TEXT NOT NULL DEFAULT ''")
     except sqlite3.OperationalError:
         pass  # column already exists (pre-existing cache file from before this migration)
     return conn

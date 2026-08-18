@@ -83,6 +83,12 @@ class IPOCatalogSummary(BaseModel):
     # explicitly not investment advice (see ipo_catalog_service.compute_apply_signal).
     apply_signal: str | None = None  # "strong_apply" | "consider" | "skip"
     apply_signal_reason: str | None = None
+    # Rough SEBI-lottery approximation (0-1) from retail subscription alone
+    # -- not exact proportional-allotment math (see
+    # ipo_catalog_service.compute_retail_allotment_probability).
+    retail_allotment_probability: float | None = None
+    # Oldest -> newest GMP% samples, capped by gmp_history_repository at 10.
+    gmp_trend: list[float | None] | None = None
 
 
 class IPOCatalogDetail(IPOCatalogSummary):
@@ -96,3 +102,16 @@ class IPOCatalogDetail(IPOCatalogSummary):
 class IPOCatalogListResponse(BaseModel):
     ipos: list[IPOCatalogSummary]
     generated_at: datetime
+
+
+class SignalAccuracyBucket(BaseModel):
+    total: int
+    correct: int
+    hit_rate: float | None
+
+
+class TrackRecordResponse(BaseModel):
+    total: int
+    correct: int
+    hit_rate: float | None
+    by_signal: dict[str, SignalAccuracyBucket]

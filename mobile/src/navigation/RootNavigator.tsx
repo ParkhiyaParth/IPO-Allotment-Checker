@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 import { AddEditPANScreen } from '../screens/AddEditPANScreen';
 import { AllotmentCheckScreen } from '../screens/AllotmentCheckScreen';
 import { AllotmentListScreen } from '../screens/AllotmentListScreen';
+import { FamilyPortfolioScreen } from '../screens/FamilyPortfolioScreen';
 import { IPODetailScreen } from '../screens/IPODetailScreen';
 import { IPOListScreen } from '../screens/IPOListScreen';
 import { PANListScreen } from '../screens/PANListScreen';
@@ -65,6 +66,11 @@ function AllotmentStackNavigator() {
         name="AllotmentCheck"
         component={AllotmentCheckScreen}
         options={({ route }) => ({ title: route.params.companyName })}
+      />
+      <AllotmentStack.Screen
+        name="FamilyPortfolio"
+        component={FamilyPortfolioScreen}
+        options={{ title: 'Family Portfolio' }}
       />
     </AllotmentStack.Navigator>
   );
