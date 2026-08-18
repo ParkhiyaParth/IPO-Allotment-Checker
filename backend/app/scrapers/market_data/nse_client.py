@@ -17,7 +17,7 @@ guess, which is why this client's field-name lookups look the way they do:
   value from shares * average band price). There is no lotSize key at all
   in this endpoint's response, so lot_size is always None here. Some rows
   (BSE-only listings, seen live as isBse: true) omit issuePrice/issueSize/
-  category entirely; those parse to a issue with None price band and size.
+  category entirely; those parse to an issue with None price band and size.
 
 - api/ipo-active-category returns {"dataList": [...], "heading", "symbol",
   "updateTime"}. Real keys per row: category, noOfShareOffered (singular
