@@ -51,6 +51,7 @@ def _profit_per_lot(record: CatalogRecord) -> tuple[float | None, str | None]:
 
 def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
     profit_per_lot, profit_basis = _profit_per_lot(record)
+    apply_signal, apply_signal_reason = ipo_catalog_service.compute_apply_signal(record)
     return IPOCatalogSummary(
         id=record.id,
         company_name=record.company_name,
@@ -69,6 +70,8 @@ def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
         linked_registrar_ipo_id=record.linked_registrar_ipo_id,
         profit_per_lot=profit_per_lot,
         profit_basis=profit_basis,
+        apply_signal=apply_signal,
+        apply_signal_reason=apply_signal_reason,
     )
 
 

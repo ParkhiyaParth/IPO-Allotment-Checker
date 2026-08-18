@@ -13,11 +13,79 @@ import logging
 from datetime import date, datetime, timezone
 
 from app.scrapers.market_data import investorgain_client, nse_client
-from app.services import ipo_catalog_repository, ipo_repository
+from app.services import ipo_catalog_repository, ipo_repository, push_service
 from app.services.ipo_catalog_repository import CatalogRecord
 from app.utils.name_matching import normalize_company_name
 
 logger = logging.getLogger(__name__)
+
+_STRONG_APPLY_SCORE = 4
+_CONSIDER_SCORE = 1
+
+
+def _subscription_times(offered: int | None, applied: int | None) -> float | None:
+    if not offered or applied is None:
+        return None
+    return applied / offered
+
+
+def compute_apply_signal(record: CatalogRecord) -> tuple[str | None, str | None]:
+    """Rule-based, fully explainable "should I apply" estimate from GMP,
+    subscription oversubscription, and issue size -- an unofficial
+    heuristic, not investment advice. Returns (None, None) when there
+    isn't enough data yet (e.g. an upcoming IPO before GMP appears)."""
+    score = 0
+    reasons: list[str] = []
+    have_signal = False
+
+    if record.gmp_percent is not None:
+        have_signal = True
+        gp = record.gmp_percent
+        if gp >= 20:
+            score += 2
+        elif gp >= 5:
+            score += 1
+        elif gp < 0:
+            score -= 2
+        reasons.append(f"GMP {gp:+.0f}%")
+
+    qib_times = _subscription_times(record.sub_qib_offered, record.sub_qib_applied)
+    if qib_times is not None:
+        have_signal = True
+        if qib_times >= 10:
+            score += 2
+        elif qib_times >= 3:
+            score += 1
+        elif qib_times < 1:
+            score -= 1
+        reasons.append(f"QIB {qib_times:.1f}x")
+
+    retail_times = _subscription_times(record.sub_retail_offered, record.sub_retail_applied)
+    if retail_times is not None:
+        have_signal = True
+        if retail_times >= 5:
+            score += 1
+        elif retail_times < 1:
+            score -= 1
+        reasons.append(f"Retail {retail_times:.1f}x")
+
+    if record.issue_size_cr is not None:
+        if record.issue_size_cr < 100:
+            score += 1
+        elif record.issue_size_cr > 1000:
+            score -= 1
+
+    if not have_signal:
+        return None, None
+
+    if score >= _STRONG_APPLY_SCORE:
+        label = "strong_apply"
+    elif score >= _CONSIDER_SCORE:
+        label = "consider"
+    else:
+        label = "skip"
+
+    return label, ", ".join(reasons) if reasons else None
 
 
 def compute_status(open_date: str | None, close_date: str | None, today: date) -> str:
@@ -164,8 +232,29 @@ async def refresh() -> int:
             target.listing_price = price
         records[existing.id] = target
 
+    # Decide apply-signal notifications against each record's *previous*
+    # notified_apply_signal (read before this cycle's upsert overwrites it),
+    # so a signal is only ever pushed once per strong-apply streak -- not
+    # re-sent every refresh while it stays strong, but sent again if it
+    # drops out and later re-enters strong_apply.
+    to_notify: list[tuple[CatalogRecord, str]] = []
+    for record_id, record in records.items():
+        status = compute_status(record.open_date, record.close_date, date.today())
+        signal, reason = compute_apply_signal(record)
+        if signal != "strong_apply":
+            record.notified_apply_signal = ""
+            continue
+        existing = ipo_catalog_repository.get_by_id(record_id)
+        prev_notified = existing.notified_apply_signal if existing else ""
+        record.notified_apply_signal = "strong_apply"
+        if status in ("open", "upcoming") and prev_notified != "strong_apply":
+            to_notify.append((record, reason or ""))
+
     if records:
         ipo_catalog_repository.upsert_many(list(records.values()))
+
+    for record, reason in to_notify:
+        await push_service.notify_apply_signal(record.company_name, reason, record.close_date)
 
     return ok_count
 

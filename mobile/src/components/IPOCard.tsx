@@ -1,7 +1,8 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { radii, spacing } from '../theme/spacing';
-import type { IPOCatalogStatus, IPOCatalogSummary } from '../types/api';
+import type { ApplySignal, IPOCatalogStatus, IPOCatalogSummary } from '../types/api';
+import { brokerLabel, openBrokerApp } from '../utils/brokerLinks';
 
 function formatDate(isoDate: string | null): string {
   if (!isoDate) return '—';
@@ -72,6 +73,58 @@ function ProfitBanner({ ipo }: { ipo: IPOCatalogSummary }) {
   );
 }
 
+const APPLY_SIGNAL_LABELS: Record<ApplySignal, string> = {
+  strong_apply: '🚀 STRONG APPLY',
+  consider: 'CONSIDER',
+  skip: 'SKIP',
+};
+
+function applySignalPalette(signal: ApplySignal) {
+  if (signal === 'strong_apply') return { bg: colors.statusAllottedBg, fg: colors.statusAllotted };
+  if (signal === 'consider') return { bg: colors.statusCheckFailedBg, fg: colors.statusCheckFailed };
+  return { bg: colors.statusNotAppliedBg, fg: colors.statusNotApplied };
+}
+
+function promptBrokerChoice(companyName: string, reason: string | null) {
+  const disclaimer =
+    (reason ? `${reason}. ` : '') +
+    'This is an unofficial estimate from GMP and subscription data, not investment advice. ' +
+    "You'll still need to apply and approve the UPI mandate yourself in your broker app.";
+
+  Alert.alert(`Apply for ${companyName}?`, disclaimer, [
+    { text: brokerLabel('angel_one'), onPress: () => openBrokerApp('angel_one') },
+    { text: brokerLabel('groww'), onPress: () => openBrokerApp('groww') },
+    { text: 'Cancel', style: 'cancel' },
+  ]);
+}
+
+function ApplySignalBanner({ ipo }: { ipo: IPOCatalogSummary }) {
+  if (ipo.apply_signal == null) return null;
+  const palette = applySignalPalette(ipo.apply_signal);
+
+  return (
+    <View style={[styles.applyBanner, { backgroundColor: palette.bg }]}>
+      <View style={styles.applyBannerText}>
+        <Text style={[styles.applyBannerLabel, { color: palette.fg }]}>
+          {APPLY_SIGNAL_LABELS[ipo.apply_signal]}
+        </Text>
+        {ipo.apply_signal_reason ? (
+          <Text style={styles.applyBannerReason}>{ipo.apply_signal_reason}</Text>
+        ) : null}
+      </View>
+      {ipo.apply_signal === 'strong_apply' ? (
+        <TouchableOpacity
+          style={styles.applyNowButton}
+          onPress={() => promptBrokerChoice(ipo.company_name, ipo.apply_signal_reason)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.applyNowButtonText}>APPLY NOW</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+}
+
 export function IPOCard({
   ipo,
   onView,
@@ -103,6 +156,7 @@ export function IPOCard({
       </Text>
 
       <ProfitBanner ipo={ipo} />
+      <ApplySignalBanner ipo={ipo} />
 
       <View style={styles.row}>
         <View style={styles.field}>
@@ -189,6 +243,26 @@ const styles = StyleSheet.create({
   profitSubLabel: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   profitNeutralText: { fontSize: 13, color: colors.textSecondary },
   profitValue: { fontSize: 20, fontWeight: '800' },
+  applyBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  applyBannerText: { flex: 1 },
+  applyBannerLabel: { fontSize: 12, fontWeight: '800', letterSpacing: 0.4 },
+  applyBannerReason: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  applyNowButton: {
+    backgroundColor: colors.statusAllotted,
+    borderRadius: radii.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  applyNowButtonText: { color: colors.textOnPrimary, fontSize: 11, fontWeight: '800', letterSpacing: 0.3 },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md },
   field: { flex: 1 },
   fieldLabel: { fontSize: 12, color: colors.textSecondary },
