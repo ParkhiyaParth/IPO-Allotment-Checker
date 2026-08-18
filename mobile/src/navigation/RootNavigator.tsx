@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text } from 'react-native';
 import { AddEditPANScreen } from '../screens/AddEditPANScreen';
+import { AllotmentCheckScreen } from '../screens/AllotmentCheckScreen';
 import { IPODetailScreen } from '../screens/IPODetailScreen';
 import { IPOListScreen } from '../screens/IPOListScreen';
 import { PANListScreen } from '../screens/PANListScreen';
@@ -26,6 +27,11 @@ function IPOsStackNavigator() {
       <IPOsStack.Screen
         name="IPODetail"
         component={IPODetailScreen}
+        options={({ route }) => ({ title: route.params.companyName })}
+      />
+      <IPOsStack.Screen
+        name="AllotmentCheck"
+        component={AllotmentCheckScreen}
         options={({ route }) => ({ title: route.params.companyName })}
       />
     </IPOsStack.Navigator>

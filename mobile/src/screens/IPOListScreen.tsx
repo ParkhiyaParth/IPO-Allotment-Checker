@@ -1,23 +1,35 @@
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
-import { IPOListItem } from '../components/IPOListItem';
+import { IPOCard } from '../components/IPOCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { useRecentIpos } from '../hooks/useRecentIpos';
+import { useIpoCatalog } from '../hooks/useIpoCatalog';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import type { IPOsStackParamList } from '../navigation/types';
+import type { IPOCatalogStatus } from '../types/api';
 
 type Props = NativeStackScreenProps<IPOsStackParamList, 'IPOList'>;
 
+const TABS: { key: IPOCatalogStatus; label: string }[] = [
+  { key: 'open', label: 'OPEN' },
+  { key: 'upcoming', label: 'UPCOMING' },
+  { key: 'closed', label: 'CLOSED' },
+];
+
 export function IPOListScreen({ navigation }: Props) {
-  const { data, isLoading, isError, refetch, isRefetching } = useRecentIpos();
+  const [status, setStatus] = useState<IPOCatalogStatus>('open');
+  const { data, isLoading, isError, refetch, isRefetching } = useIpoCatalog(status);
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Recent IPOs</Text>
-        <Text style={styles.subtitle}>Allotment finalized · tap to check your PANs</Text>
+      <View style={styles.tabRow}>
+        {TABS.map((tab) => (
+          <TouchableOpacity key={tab.key} onPress={() => setStatus(tab.key)}>
+            <Text style={[styles.tabLabel, status === tab.key && styles.tabLabelActive]}>{tab.label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {isLoading ? (
@@ -29,16 +41,23 @@ export function IPOListScreen({ navigation }: Props) {
           subtitle="Check that the backend server is running and reachable, then pull to refresh."
         />
       ) : !data || data.length === 0 ? (
-        <EmptyState icon="🗂️" title="No recent IPOs yet" subtitle="Pull to refresh." />
+        <EmptyState icon="🗂️" title={`No ${status} IPOs`} subtitle="Pull to refresh." />
       ) : (
         <FlatList
           data={data}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <IPOListItem
+            <IPOCard
               ipo={item}
-              onPress={() =>
-                navigation.navigate('IPODetail', { ipoId: item.id, companyName: item.company_name })
+              onView={() => navigation.navigate('IPODetail', { ipoId: item.id, companyName: item.company_name })}
+              onCheckAllotment={
+                item.linked_registrar_ipo_id
+                  ? () =>
+                      navigation.navigate('AllotmentCheck', {
+                        ipoId: item.linked_registrar_ipo_id as string,
+                        companyName: item.company_name,
+                      })
+                  : undefined
               }
             />
           )}
@@ -51,26 +70,15 @@ export function IPOListScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  headerRow: {
+  container: { flex: 1, backgroundColor: colors.background },
+  tabRow: {
+    flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
+    gap: spacing.lg,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  listContent: {
-    paddingBottom: spacing.xl,
-  },
+  tabLabel: { fontSize: 14, fontWeight: '700', color: colors.textSecondary, paddingBottom: spacing.xs },
+  tabLabelActive: { color: colors.primary, borderBottomWidth: 2, borderBottomColor: colors.primary },
+  listContent: { paddingBottom: spacing.xl },
 });

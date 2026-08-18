@@ -47,3 +47,39 @@ class CheckAllotmentResponse(BaseModel):
 
 class RegisterPushTokenRequest(BaseModel):
     token: str = Field(pattern=r"^ExponentPushToken\[.+\]$")
+
+
+class SubscriptionCategory(BaseModel):
+    offered: int | None = None
+    applied: int | None = None
+    times: float | None = None
+
+
+class IPOCatalogSummary(BaseModel):
+    id: str
+    company_name: str
+    status: str
+    open_date: date | None = None
+    close_date: date | None = None
+    price_band_low: float | None = None
+    price_band_high: float | None = None
+    lot_size: int | None = None
+    issue_size_cr: float | None = None
+    gmp_value: float | None = None
+    gmp_percent: float | None = None
+    listing_price: float | None = None
+    current_price: float | None = None
+    linked_registrar_ipo_id: str | None = None
+
+
+class IPOCatalogDetail(IPOCatalogSummary):
+    listing_date: date | None = None
+    gmp_updated_at: datetime | None = None
+    subscription_qib: SubscriptionCategory
+    subscription_hni: SubscriptionCategory
+    subscription_retail: SubscriptionCategory
+
+
+class IPOCatalogListResponse(BaseModel):
+    ipos: list[IPOCatalogSummary]
+    generated_at: datetime
