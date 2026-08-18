@@ -76,6 +76,7 @@ class NseIpoIssue:
 @dataclass
 class NseCategorySubscription:
     category: str
+    sr_no: str | None = None
     offered: int | None = None
     applied: int | None = None
     times: float | None = None
@@ -154,6 +155,7 @@ async def get_current_issues() -> list[NseIpoIssue]:
 def _parse_category(row: dict) -> NseCategorySubscription:
     return NseCategorySubscription(
         category=row.get("category", ""),
+        sr_no=row.get("srNo"),
         offered=_to_int_field(row.get("noOfShareOffered")),
         applied=_to_int_field(row.get("noOfSharesBid")),
         times=_to_float(row.get("noOfTotalMeant")),

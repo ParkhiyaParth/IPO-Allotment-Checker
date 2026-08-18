@@ -37,7 +37,20 @@ async def get_recent_ipos() -> RecentIposResponse:
     )
 
 
+def _profit_per_lot(record: CatalogRecord) -> tuple[float | None, str | None]:
+    """Real profit once listed (needs both a live price and the issue
+    price to compare against); otherwise an *estimate* from GMP alone,
+    which needs no issue price since GMP is already the premium-per-share
+    figure. Returns (None, None) when neither is available."""
+    if record.current_price is not None and record.issue_price is not None and record.lot_size:
+        return (record.current_price - record.issue_price) * record.lot_size, "actual"
+    if record.gmp_value is not None and record.lot_size:
+        return record.gmp_value * record.lot_size, "estimated"
+    return None, None
+
+
 def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
+    profit_per_lot, profit_basis = _profit_per_lot(record)
     return IPOCatalogSummary(
         id=record.id,
         company_name=record.company_name,
@@ -46,6 +59,7 @@ def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
         close_date=record.close_date,
         price_band_low=record.price_band_low,
         price_band_high=record.price_band_high,
+        issue_price=record.issue_price,
         lot_size=record.lot_size,
         issue_size_cr=record.issue_size_cr,
         gmp_value=record.gmp_value,
@@ -53,6 +67,8 @@ def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
         listing_price=record.listing_price,
         current_price=record.current_price,
         linked_registrar_ipo_id=record.linked_registrar_ipo_id,
+        profit_per_lot=profit_per_lot,
+        profit_basis=profit_basis,
     )
 
 

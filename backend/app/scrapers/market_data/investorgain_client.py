@@ -45,6 +45,7 @@ class InvestorgainIpoRow:
     gmp_percent: float | None = None
     lot_size: int | None = None
     issue_size_cr: float | None = None
+    issue_price: float | None = None
     open_date: str | None = None
     close_date: str | None = None
     boa_date: str | None = None
@@ -77,6 +78,7 @@ def _parse_row(row: dict) -> InvestorgainIpoRow:
         gmp_percent=_to_float(row.get("~gmp_percent_calc")),
         lot_size=to_int(str(row.get("Lot"))) if row.get("Lot") else None,
         issue_size_cr=issue_size_cr,
+        issue_price=_to_float(row.get("Price (₹)")),
         open_date=row.get("~Srt_Open") or None,
         close_date=row.get("~Srt_Close") or None,
         boa_date=row.get("~Srt_BoA_Dt") or None,

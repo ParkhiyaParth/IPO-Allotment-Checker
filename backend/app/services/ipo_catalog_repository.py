@@ -15,7 +15,7 @@ from app.db.database import get_connection
 
 _FIELDS = [
     "company_name", "nse_symbol", "chittorgarh_slug", "open_date", "close_date",
-    "price_band_low", "price_band_high", "lot_size", "issue_size_cr",
+    "price_band_low", "price_band_high", "issue_price", "lot_size", "issue_size_cr",
     "gmp_value", "gmp_percent", "gmp_updated_at",
     "sub_qib_offered", "sub_qib_applied", "sub_hni_offered", "sub_hni_applied",
     "sub_retail_offered", "sub_retail_applied", "sub_updated_at",
@@ -34,6 +34,7 @@ class CatalogRecord:
     close_date: str | None = None
     price_band_low: float | None = None
     price_band_high: float | None = None
+    issue_price: float | None = None
     lot_size: int | None = None
     issue_size_cr: float | None = None
     gmp_value: float | None = None

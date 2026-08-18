@@ -69,6 +69,7 @@ async def refresh() -> int:
             listing_date=row.listing_date,
             lot_size=row.lot_size,
             issue_size_cr=row.issue_size_cr,
+            issue_price=row.issue_price,
             gmp_value=row.gmp_value,
             gmp_percent=row.gmp_percent,
             gmp_updated_at=now_iso if row.gmp_value is not None else None,
@@ -99,10 +100,18 @@ async def refresh() -> int:
         except Exception:
             logger.exception("NSE subscription fetch failed for %s", issue.symbol)
 
-        sub_by_category = {s.category.upper(): s for s in subscription}
-        qib = sub_by_category.get("QIB")
-        hni = sub_by_category.get("HNI") or sub_by_category.get("NII")
-        retail = sub_by_category.get("RETAIL") or sub_by_category.get("RII")
+        # NSE's real category names are full phrases ("Qualified
+        # Institutional Buyers(QIBs)", "Non Institutional Investors",
+        # "Retail Individual Investors(RIIs)") -- confirmed live -- not
+        # short codes, so matching by "QIB"/"HNI"/"RETAIL" strings never
+        # actually matched anything (always fell through to None/"-"). Sr.No
+        # is far more robust: NSE always uses top-level "1"/"2"/"3" for
+        # these three categories, with sub-breakdowns as "1(a)", "2.1" etc,
+        # so this can't accidentally grab a subcategory's numbers instead.
+        sub_by_sr_no = {s.sr_no: s for s in subscription}
+        qib = sub_by_sr_no.get("1")
+        hni = sub_by_sr_no.get("2")
+        retail = sub_by_sr_no.get("3")
 
         target = records.get(record_id) or CatalogRecord(
             id=record_id,

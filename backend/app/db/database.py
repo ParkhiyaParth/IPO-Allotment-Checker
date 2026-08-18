@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS ipo_catalog (
     close_date TEXT,
     price_band_low REAL,
     price_band_high REAL,
+    issue_price REAL,
     lot_size INTEGER,
     issue_size_cr REAL,
     gmp_value REAL,
@@ -64,6 +65,10 @@ def get_connection() -> sqlite3.Connection:
         pass  # column already exists (pre-existing cache file from before this migration)
     try:
         conn.execute("ALTER TABLE ipo_catalog ADD COLUMN boa_date TEXT")
+    except sqlite3.OperationalError:
+        pass  # column already exists (pre-existing cache file from before this migration)
+    try:
+        conn.execute("ALTER TABLE ipo_catalog ADD COLUMN issue_price REAL")
     except sqlite3.OperationalError:
         pass  # column already exists (pre-existing cache file from before this migration)
     return conn
