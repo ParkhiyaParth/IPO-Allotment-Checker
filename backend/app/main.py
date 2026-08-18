@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import routes_allotment, routes_diagnostics, routes_ipos, routes_push
+from app.api import routes_allotment, routes_ipos, routes_push
 from app.config import settings
 from app.services import ipo_list_service
 from app.utils.http_client import close_http_client
@@ -76,7 +76,6 @@ app.add_middleware(
 app.include_router(routes_ipos.router)
 app.include_router(routes_allotment.router)
 app.include_router(routes_push.router)
-app.include_router(routes_diagnostics.router)
 
 
 @app.get("/health")
