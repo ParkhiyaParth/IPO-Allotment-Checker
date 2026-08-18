@@ -67,6 +67,15 @@ def get_recent(limit: int = 15) -> list[CachedIpo]:
         conn.close()
 
 
+def get_all() -> list[CachedIpo]:
+    conn = get_connection()
+    try:
+        rows = conn.execute("SELECT * FROM ipo_cache").fetchall()
+        return [_row_to_record(row) for row in rows]
+    finally:
+        conn.close()
+
+
 def get_by_id(ipo_id: str) -> CachedIpo | None:
     conn = get_connection()
     try:
