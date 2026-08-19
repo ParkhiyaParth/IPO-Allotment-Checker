@@ -78,6 +78,25 @@ async def test_get_subscription_parses_category_breakdown(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_get_all_indices_parses_broad_and_sector_indices(monkeypatch):
+    fake_client = FakeAsyncClient(
+        {"https://www.nseindia.com/api/allIndices": FakeResponse(json_data=_load("nse_all_indices.json"))}
+    )
+    monkeypatch.setattr(nse_client, "get_http_client", lambda: fake_client)
+
+    indices = await nse_client.get_all_indices()
+
+    assert len(indices) == 3
+    broad = next(i for i in indices if i.index_symbol == "NIFTY 50")
+    assert broad.percent_change_1d == -0.42
+    assert broad.percent_change_30d == -1.16
+
+    # Same response also carries sector indices (not a separate endpoint).
+    auto = next(i for i in indices if i.index_symbol == "NIFTY AUTO")
+    assert auto.percent_change_30d == 7.57
+
+
+@pytest.mark.asyncio
 async def test_get_quote_returns_last_price(monkeypatch):
     fake_client = FakeAsyncClient(
         {"https://www.nseindia.com/api/quote-equity": FakeResponse(json_data=_load("nse_quote.json"))}

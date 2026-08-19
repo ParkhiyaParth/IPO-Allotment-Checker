@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import routes_allotment, routes_device_pans, routes_ipos, routes_push
 from app.config import settings
-from app.services import ipo_catalog_service, ipo_list_service
+from app.services import ipo_catalog_service, ipo_list_service, news_market_refresh_service
 from app.utils.http_client import close_http_client
 
 # Without this, INFO-level logger.info() calls anywhere in the app are
@@ -43,6 +43,12 @@ MARKET_HOURS_END_HOUR = 17
 # window.
 CATALOG_MARKET_HOURS_INTERVAL_SECONDS = 5 * 60
 CATALOG_OFF_HOURS_INTERVAL_SECONDS = 2 * 60 * 60
+
+# Historical-outcomes backfill, news sentiment, and broad-market trend
+# (ipo_potential_service's inputs) don't move fast enough to justify the
+# 5-min catalog cadence -- once/day keeps this feature's extra outbound
+# traffic (one news-RSS fetch per open/upcoming IPO) light on the 1 OCPU box.
+NEWS_MARKET_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60
 
 
 def _next_refresh_delay_seconds() -> int:
@@ -79,6 +85,16 @@ async def _periodic_catalog_refresh() -> None:
             logger.exception("IPO catalog refresh failed")
 
 
+async def _periodic_news_market_refresh() -> None:
+    while True:
+        await asyncio.sleep(NEWS_MARKET_REFRESH_INTERVAL_SECONDS)
+        try:
+            await news_market_refresh_service.refresh_daily()
+            logger.info("News/market/historical-outcomes refresh completed")
+        except Exception:
+            logger.exception("News/market/historical-outcomes refresh failed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -89,11 +105,17 @@ async def lifespan(app: FastAPI):
         await ipo_catalog_service.refresh()
     except Exception:
         logger.exception("Initial IPO catalog refresh failed")
+    try:
+        await news_market_refresh_service.refresh_daily()
+    except Exception:
+        logger.exception("Initial news/market/historical-outcomes refresh failed")
     refresh_task = asyncio.create_task(_periodic_refresh())
     catalog_refresh_task = asyncio.create_task(_periodic_catalog_refresh())
+    news_market_refresh_task = asyncio.create_task(_periodic_news_market_refresh())
     yield
     refresh_task.cancel()
     catalog_refresh_task.cancel()
+    news_market_refresh_task.cancel()
     await close_http_client()
 
 

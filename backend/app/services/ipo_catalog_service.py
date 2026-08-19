@@ -181,6 +181,8 @@ async def refresh() -> int:
             gmp_percent=row.gmp_percent,
             gmp_updated_at=now_iso if row.gmp_value is not None else None,
             linked_registrar_ipo_id=registrar_by_name.get(normalized),
+            rating=row.rating,
+            pe_ratio=row.pe_ratio,
             first_seen_at=now_iso,
         )
 

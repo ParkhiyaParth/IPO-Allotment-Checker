@@ -105,6 +105,17 @@ class IPOCatalogSummary(BaseModel):
     retail_allotment_probability: float | None = None
     # Oldest -> newest GMP% samples, capped by gmp_history_repository at 10.
     gmp_trend: list[float | None] | None = None
+    # Deeper, multi-factor "IPO Potential" score -- news sentiment, broad
+    # market trend, and REAL historical base-rate statistics from past
+    # IPOs, distinct from (and additive to) apply_signal above. Explicitly
+    # rule-based, not a trained model yet -- see
+    # ipo_potential_service.py's module docstring for why. basis is always
+    # "historical_stats" for now; "ml_model" is reserved for a future,
+    # separately-gated phase once enough real outcomes exist.
+    ipo_potential_label: str | None = None  # "strong_potential" | "promising" | "uncertain" | "weak"
+    ipo_potential_score: int | None = None  # 0-100, display-only approximation, not a probability
+    ipo_potential_reasons: list[str] | None = None
+    ipo_potential_basis: str | None = None  # "historical_stats" | "ml_model"
 
 
 class IPOCatalogDetail(IPOCatalogSummary):

@@ -6,3 +6,4 @@ pydantic-settings
 pycryptodome
 python-dotenv
 tzdata
+vaderSentiment

@@ -33,6 +33,18 @@ REPORT_URL = "https://webnodejs.investorgain.com/cloud/v2/report/data-read/331/1
 _GMP_VALUE_RE = re.compile(r"<b>(-?[\d.]+)</b>")
 _ISSUE_SIZE_RE = re.compile(r"([\d.]+)\s*Cr")
 _BADGE_RE = re.compile(r'bg-(?:warning|success|primary)[^>]*>([A-Z])<')
+# "Rating" is investorgain's own 0-5 fire-emoji score for the IPO, "Anchor" a
+# plain checkmark for anchor-investor participation -- both confirmed live
+# in the SAME response already fetched every refresh cycle, just never
+# parsed before (see investorgain_history_client.py's docstring for why the
+# richer chittorgarh anchor-investor detail page wasn't usable instead).
+# Confirmed live: "Rating" sends the fire emoji as a literal numeric HTML
+# entity ("&#128293;"), NOT a decoded character -- inconsistent with
+# "Anchor", whose checkmark the API sends pre-decoded as a real unicode
+# character. Each field is counted/matched in whichever form it actually
+# arrives in.
+_FIRE_EMOJI_ENTITY = "&#128293;"
+_CHECKMARK = "✅"
 
 _STATUS_BY_BADGE = {"U": "upcoming", "O": "open", "C": "closed"}
 
@@ -50,6 +62,9 @@ class InvestorgainIpoRow:
     close_date: str | None = None
     boa_date: str | None = None
     listing_date: str | None = None
+    rating: int | None = None  # 0-5, investorgain's own fire-emoji score
+    pe_ratio: float | None = None
+    has_anchor: bool = False
 
 
 def _to_float(value) -> float | None:
@@ -71,6 +86,12 @@ def _parse_row(row: dict) -> InvestorgainIpoRow:
     issue_size_match = _ISSUE_SIZE_RE.search(row.get("IPO Size", ""))
     issue_size_cr = _to_float(issue_size_match.group(1)) if issue_size_match else None
 
+    rating_html = row.get("Rating", "")
+    rating = rating_html.count(_FIRE_EMOJI_ENTITY) or None
+
+    pe_raw = row.get("~P/E")
+    pe_ratio = _to_float(pe_raw) if pe_raw and pe_raw != "--" else None
+
     return InvestorgainIpoRow(
         company_name=row.get("~ipo_name", "").strip(),
         status=status,
@@ -83,6 +104,9 @@ def _parse_row(row: dict) -> InvestorgainIpoRow:
         close_date=row.get("~Srt_Close") or None,
         boa_date=row.get("~Srt_BoA_Dt") or None,
         listing_date=row.get("~Str_Listing") or None,
+        rating=rating,
+        pe_ratio=pe_ratio,
+        has_anchor=_CHECKMARK in row.get("Anchor", ""),
     )
 
 
