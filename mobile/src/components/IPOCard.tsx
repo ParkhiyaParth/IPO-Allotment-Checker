@@ -155,6 +155,7 @@ export function IPOCard({
       <Text style={styles.meta}>
         {formatDate(ipo.open_date)} - {formatDate(ipo.close_date)}
       </Text>
+      <Text style={styles.allotmentMeta}>📅 Allotment Date: {formatDate(ipo.boa_date)}</Text>
 
       <ProfitBanner ipo={ipo} />
       <ApplySignalBanner ipo={ipo} />
@@ -240,6 +241,7 @@ const styles = StyleSheet.create({
   },
   statusPillText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.4 },
   meta: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.xs },
+  allotmentMeta: { fontSize: 12, fontWeight: '700', color: colors.primary, marginTop: 3 },
   profitBanner: {
     flexDirection: 'row',
     justifyContent: 'space-between',

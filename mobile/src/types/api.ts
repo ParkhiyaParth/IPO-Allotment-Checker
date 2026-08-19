@@ -46,6 +46,7 @@ export interface IPOCatalogSummary {
   status: IPOCatalogStatus;
   open_date: string | null;
   close_date: string | null;
+  boa_date: string | null;
   price_band_low: number | null;
   price_band_high: number | null;
   issue_price: number | null;
