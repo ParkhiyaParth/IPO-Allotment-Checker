@@ -14,4 +14,5 @@ export type AllotmentStackParamList = {
   AllotmentList: undefined;
   AllotmentCheck: { ipoId: string; companyName: string };
   FamilyPortfolio: undefined;
+  ApplicationTimeline: undefined;
 };

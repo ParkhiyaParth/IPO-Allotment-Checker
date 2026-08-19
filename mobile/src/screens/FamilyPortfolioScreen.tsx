@@ -65,7 +65,7 @@ export function FamilyPortfolioScreen() {
           <Text style={styles.nudgesHeading}>Nudges</Text>
         </View>
       }
-      renderItem={({ item }) => <NudgeRow nudge={item} onMarkApplied={() => markApplied(item.ipoId, item.panId)} />}
+      renderItem={({ item }) => <NudgeRow nudge={item} onMarkApplied={() => markApplied(item)} />}
       ListEmptyComponent={
         <View style={styles.emptyNudges}>
           <Text style={styles.summaryEmpty}>No pending nudges — every saved PAN is marked applied on current strong-apply IPOs.</Text>
