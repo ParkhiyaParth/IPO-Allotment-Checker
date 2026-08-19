@@ -21,6 +21,13 @@ function formatProfit(value: number): string {
   return `${value < 0 ? '-' : '+'}₹${rounded.toLocaleString('en-IN')}`;
 }
 
+function formatTimes(value: number): string {
+  // Cap to 4 significant figures (e.g. "5.233x", "12.35x", "123.5x")
+  // instead of raw floating-point division showing many decimal places,
+  // then strip any trailing zeros toPrecision introduces.
+  return `${parseFloat(value.toPrecision(4))}x`;
+}
+
 const APPLY_SIGNAL_LABELS: Record<ApplySignal, string> = {
   strong_apply: '🚀 Strong Apply',
   consider: 'Consider',
@@ -52,7 +59,7 @@ function SubscriptionRow({ label, category }: { label: string; category: Subscri
       <Text style={styles.tableCell}>{label}</Text>
       <Text style={styles.tableCell}>{fmt(category.offered)}</Text>
       <Text style={styles.tableCell}>{fmt(category.applied)}</Text>
-      <Text style={styles.tableCell}>{category.times != null ? `${category.times}x` : '—'}</Text>
+      <Text style={styles.tableCell}>{category.times != null ? formatTimes(category.times) : '—'}</Text>
     </View>
   );
 }
