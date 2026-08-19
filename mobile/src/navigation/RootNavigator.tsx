@@ -22,6 +22,10 @@ const stackHeaderOptions = {
   headerStyle: { backgroundColor: colors.primary },
   headerTintColor: colors.textOnPrimary,
   headerTitleStyle: { fontWeight: '700' as const },
+  // Explicit even though it's the native-stack default -- swipe-back
+  // (edge swipe / interactive pop) relies on GestureHandlerRootView
+  // wrapping the app root (see App.tsx), which was missing before.
+  gestureEnabled: true,
 };
 
 function IPOsStackNavigator() {
