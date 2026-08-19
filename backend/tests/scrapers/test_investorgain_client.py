@@ -42,6 +42,12 @@ async def test_get_live_report_parses_all_status_badges(monkeypatch):
     assert skyways.open_date == "2026-08-24"
     assert skyways.close_date == "2026-08-27"
     assert skyways.listing_date == "2026-09-01"
+    # Real fixture: "Rating" sends the fire emoji as a literal HTML entity
+    # ("&#128293;") repeated N times, "Anchor" sends a pre-decoded unicode
+    # checkmark, "~P/E" is the literal string "--" when not yet known.
+    assert skyways.rating == 4
+    assert skyways.has_anchor is True
+    assert skyways.pe_ratio is None
 
     # Real fixture includes rows already past listing with no status badge
     # at all in the "Name" HTML fragment -- must default to "listed" rather
@@ -85,3 +91,8 @@ async def test_get_live_report_handles_missing_gmp_gracefully(monkeypatch):
     assert row.lot_size is None
     assert row.issue_size_cr is None
     assert row.listing_date is None
+    # Rating/Anchor/P-E keys absent entirely (older cache shape or a row
+    # missing that data) must default sanely, not raise.
+    assert row.rating is None
+    assert row.pe_ratio is None
+    assert row.has_anchor is False

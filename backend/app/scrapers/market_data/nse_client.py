@@ -30,6 +30,14 @@ guess, which is why this client's field-name lookups look the way they do:
   labels, srNo="Sr.No.") and is filtered out here rather than exposed as a
   bogus category.
 
+- api/allIndices (confirmed live 2026-08-19, no cookie priming needed --
+  same trust level as the other two working endpoints, not quote-equity)
+  returns {"data": [...]}, one row per NSE index (139 total, broad market
+  AND every sector index in the same response -- no separate per-sector
+  endpoint needed). Real keys: index (display name, e.g. "NIFTY 50"),
+  indexSymbol (e.g. "NIFTY 50", "NIFTY AUTO"), percentChange (1-day),
+  perChange30d, perChange365d.
+
 - api/quote-equity could NOT be captured live in the dev environment: it
   (and even a bare GET of https://www.nseindia.com/) returned a persistent
   Akamai edge "403 Access Denied", reproducible across a plain
@@ -71,6 +79,13 @@ class NseIpoIssue:
     price_band_high: float | None = None
     lot_size: int | None = None
     issue_size_cr: float | None = None
+
+
+@dataclass
+class NseIndexTrend:
+    index_symbol: str
+    percent_change_1d: float | None = None
+    percent_change_30d: float | None = None
 
 
 @dataclass
@@ -172,6 +187,23 @@ async def get_subscription(symbol: str) -> list[NseCategorySubscription]:
         _parse_category(row)
         for row in rows
         if row.get("srNo") != _HEADER_ROW_SR_NO and row.get("category") != "Category"
+    ]
+
+
+async def get_all_indices() -> list[NseIndexTrend]:
+    client = get_http_client()
+    resp = await client.get(f"{BASE_URL}/allIndices")
+    resp.raise_for_status()
+    data = resp.json()
+    rows = data.get("data", []) if isinstance(data, dict) else data
+    return [
+        NseIndexTrend(
+            index_symbol=row.get("indexSymbol", ""),
+            percent_change_1d=_to_float(row.get("percentChange")),
+            percent_change_30d=_to_float(row.get("perChange30d")),
+        )
+        for row in rows
+        if row.get("indexSymbol")
     ]
 
 

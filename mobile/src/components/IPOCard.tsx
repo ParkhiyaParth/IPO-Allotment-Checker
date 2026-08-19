@@ -4,6 +4,7 @@ import { radii, spacing } from '../theme/spacing';
 import type { ApplySignal, IPOCatalogStatus, IPOCatalogSummary } from '../types/api';
 import { brokerLabel, openBrokerApp } from '../utils/brokerLinks';
 import { GmpSparkline } from './GmpSparkline';
+import { PotentialBadge } from './PotentialBadge';
 
 function formatDate(isoDate: string | null): string {
   if (!isoDate) return '—';
@@ -159,6 +160,11 @@ export function IPOCard({
 
       <ProfitBanner ipo={ipo} />
       <ApplySignalBanner ipo={ipo} />
+      <PotentialBadge
+        label={ipo.ipo_potential_label}
+        score={ipo.ipo_potential_score}
+        reasons={ipo.ipo_potential_reasons}
+      />
 
       <View style={styles.row}>
         <View style={styles.field}>

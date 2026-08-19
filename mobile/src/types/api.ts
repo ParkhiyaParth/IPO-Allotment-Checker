@@ -39,6 +39,8 @@ export interface SubscriptionCategory {
 
 export type ProfitBasis = 'actual' | 'estimated';
 export type ApplySignal = 'strong_apply' | 'consider' | 'skip';
+export type IpoPotentialLabel = 'strong_potential' | 'promising' | 'uncertain' | 'weak';
+export type IpoPotentialBasis = 'historical_stats' | 'ml_model';
 
 export interface IPOCatalogSummary {
   id: string;
@@ -63,6 +65,13 @@ export interface IPOCatalogSummary {
   apply_signal_reason: string | null;
   retail_allotment_probability: number | null;
   gmp_trend: (number | null)[] | null;
+  // Deeper, multi-factor "IPO Potential" score -- news sentiment, broad
+  // market trend, and real historical base-rate statistics from past
+  // IPOs. Distinct from (and shown alongside, not instead of) apply_signal.
+  ipo_potential_label: IpoPotentialLabel | null;
+  ipo_potential_score: number | null;
+  ipo_potential_reasons: string[] | null;
+  ipo_potential_basis: IpoPotentialBasis | null;
 }
 
 export interface IPOCatalogDetail extends IPOCatalogSummary {

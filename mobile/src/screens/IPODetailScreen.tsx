@@ -2,6 +2,7 @@ import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { GmpSparkline } from '../components/GmpSparkline';
+import { PotentialBadge } from '../components/PotentialBadge';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useIpoCatalogDetail } from '../hooks/useIpoCatalog';
 import { colors } from '../theme/colors';
@@ -117,6 +118,14 @@ export function IPODetailScreen({ route }: Props) {
           ) : null}
         </View>
       ) : null}
+
+      <View style={styles.potentialBadgeWrapper}>
+        <PotentialBadge
+          label={data.ipo_potential_label}
+          score={data.ipo_potential_score}
+          reasons={data.ipo_potential_reasons}
+        />
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>IPO Details</Text>
@@ -235,6 +244,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   applyNowButtonText: { color: colors.textOnPrimary, fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
+  potentialBadgeWrapper: { marginBottom: spacing.lg },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 12,

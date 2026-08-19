@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS ipo_catalog (
     signal_accuracy_logged TEXT NOT NULL DEFAULT '',
     gmp_momentum_alerted_at TEXT NOT NULL DEFAULT '',
     auto_checked_boa TEXT NOT NULL DEFAULT '',
+    rating INTEGER,
+    pe_ratio REAL,
     first_seen_at TEXT NOT NULL,
     last_seen_at TEXT NOT NULL
 );
@@ -83,6 +85,38 @@ CREATE TABLE IF NOT EXISTS gmp_history (
     recorded_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_gmp_history_catalog_id ON gmp_history(catalog_id, recorded_at);
+
+CREATE TABLE IF NOT EXISTS ipo_historical_outcomes (
+    id TEXT PRIMARY KEY,
+    company_name TEXT NOT NULL,
+    listing_date TEXT,
+    issue_size_cr REAL,
+    issue_price REAL,
+    pe_ratio REAL,
+    sub_qib_times REAL,
+    sub_hni_times REAL,
+    sub_retail_times REAL,
+    sub_total_times REAL,
+    gmp_percent_at_close REAL,
+    listing_gain_percent REAL,
+    current_gain_percent REAL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS news_sentiment_cache (
+    catalog_id TEXT PRIMARY KEY,
+    sentiment_score REAL,
+    headline_count INTEGER NOT NULL,
+    computed_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS market_trend_cache (
+    id TEXT PRIMARY KEY,
+    index_symbol TEXT NOT NULL,
+    percent_change_1d REAL,
+    percent_change_30d REAL,
+    recorded_at TEXT NOT NULL
+);
 """
 
 
@@ -121,6 +155,14 @@ def get_connection() -> sqlite3.Connection:
         pass  # column already exists (pre-existing cache file from before this migration)
     try:
         conn.execute("ALTER TABLE push_tokens ADD COLUMN device_id TEXT NOT NULL DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass  # column already exists (pre-existing cache file from before this migration)
+    try:
+        conn.execute("ALTER TABLE ipo_catalog ADD COLUMN rating INTEGER")
+    except sqlite3.OperationalError:
+        pass  # column already exists (pre-existing cache file from before this migration)
+    try:
+        conn.execute("ALTER TABLE ipo_catalog ADD COLUMN pe_ratio REAL")
     except sqlite3.OperationalError:
         pass  # column already exists (pre-existing cache file from before this migration)
     return conn
