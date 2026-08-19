@@ -67,6 +67,7 @@ def _to_summary(record: CatalogRecord, status: str) -> IPOCatalogSummary:
         status=status,
         open_date=record.open_date,
         close_date=record.close_date,
+        boa_date=record.boa_date,
         price_band_low=record.price_band_low,
         price_band_high=record.price_band_high,
         issue_price=record.issue_price,

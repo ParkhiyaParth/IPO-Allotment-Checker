@@ -72,6 +72,11 @@ class IPOCatalogSummary(BaseModel):
     status: str
     open_date: date | None = None
     close_date: date | None = None
+    # Basis-of-Allotment date -- when this IPO's allotment result actually
+    # gets published, sourced from investorgain (see
+    # ipo_catalog_service.refresh()'s primary source). Distinct from
+    # listing_date (when the stock starts trading).
+    boa_date: date | None = None
     price_band_low: float | None = None
     price_band_high: float | None = None
     issue_price: float | None = None

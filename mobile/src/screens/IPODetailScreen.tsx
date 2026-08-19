@@ -122,6 +122,10 @@ export function IPODetailScreen({ route }: Props) {
           <Text style={styles.fieldValue}>{fmt(data.close_date)}</Text>
         </View>
         <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>📅 Allotment Date</Text>
+          <Text style={[styles.fieldValue, styles.allotmentDateValue]}>{fmt(data.boa_date)}</Text>
+        </View>
+        <View style={styles.fieldRow}>
           <Text style={styles.fieldLabel}>Price Band</Text>
           <Text style={styles.fieldValue}>
             {data.price_band_low != null && data.price_band_high != null
@@ -236,6 +240,7 @@ const styles = StyleSheet.create({
   fieldRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
   fieldLabel: { fontSize: 13, color: colors.textSecondary },
   fieldValue: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+  allotmentDateValue: { color: colors.primary, fontWeight: '700' },
   gmpValueColumn: { alignItems: 'flex-end' },
   tableRow: { flexDirection: 'row', paddingVertical: spacing.xs },
   tableCell: { flex: 1, fontSize: 13, color: colors.textPrimary, textAlign: 'center' },
