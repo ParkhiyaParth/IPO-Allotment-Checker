@@ -36,7 +36,12 @@ OFF_HOURS_CHECK_INTERVAL_SECONDS = 2 * 60 * 60
 
 MARKET_HOURS_START_HOUR = 9
 MARKET_HOURS_END_HOUR = 17
-CATALOG_MARKET_HOURS_INTERVAL_SECONDS = 15 * 60
+# Subscription/GMP numbers move continuously while bidding is open, so
+# during market hours this refreshes every 5 min instead of the coarser
+# 15 min used everywhere else -- off-hours stays at 2h since nothing is
+# actually changing (no live bidding, no fresh GMP quotes) outside this
+# window.
+CATALOG_MARKET_HOURS_INTERVAL_SECONDS = 5 * 60
 CATALOG_OFF_HOURS_INTERVAL_SECONDS = 2 * 60 * 60
 
 
