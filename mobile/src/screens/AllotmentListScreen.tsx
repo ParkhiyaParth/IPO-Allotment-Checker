@@ -34,6 +34,9 @@ export function AllotmentListScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.navigate('FamilyPortfolio')} activeOpacity={0.7}>
           <Text style={styles.portfolioLink}>View Family Portfolio →</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ApplicationTimeline')} activeOpacity={0.7}>
+          <Text style={styles.portfolioLink}>View Application Timeline →</Text>
+        </TouchableOpacity>
       </View>
 
       {isLoading ? (

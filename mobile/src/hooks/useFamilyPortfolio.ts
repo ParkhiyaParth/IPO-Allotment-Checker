@@ -14,6 +14,9 @@ export interface FamilyPortfolioNudge {
   ipoId: string;
   companyName: string;
   closeDate: string | null;
+  boaDate: string | null;
+  lotSize: number | null;
+  issuePrice: number | null;
   reason: string | null;
 }
 
@@ -67,13 +70,28 @@ export function useFamilyPortfolio() {
         ipoId: ipo.linked_registrar_ipo_id,
         companyName: ipo.company_name,
         closeDate: ipo.close_date,
+        boaDate: ipo.boa_date,
+        lotSize: ipo.lot_size,
+        issuePrice: ipo.issue_price,
         reason: ipo.apply_signal_reason,
       });
     }
   }
 
-  const markApplied = async (ipoId: string, panId: string) => {
-    await appliedMarksStore.setApplied(ipoId, panId, true);
+  const markApplied = async (nudge: FamilyPortfolioNudge) => {
+    const amountBlocked =
+      nudge.lotSize != null && nudge.issuePrice != null ? nudge.lotSize * nudge.issuePrice : null;
+    await appliedMarksStore.recordApplication({
+      ipoId: nudge.ipoId,
+      panId: nudge.panId,
+      panName: nudge.panName,
+      companyName: nudge.companyName,
+      lots: 1,
+      amountBlocked,
+      boaDate: nudge.boaDate,
+      closeDate: nudge.closeDate,
+      appliedAt: new Date().toISOString(),
+    });
     queryClient.invalidateQueries({ queryKey: APPLIED_MARKS_QUERY_KEY });
   };
 

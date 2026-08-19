@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 import { AddEditPANScreen } from '../screens/AddEditPANScreen';
 import { AllotmentCheckScreen } from '../screens/AllotmentCheckScreen';
 import { AllotmentListScreen } from '../screens/AllotmentListScreen';
+import { ApplicationTimelineScreen } from '../screens/ApplicationTimelineScreen';
 import { DeviceSyncScreen } from '../screens/DeviceSyncScreen';
 import { FamilyPortfolioScreen } from '../screens/FamilyPortfolioScreen';
 import { IPODetailScreen } from '../screens/IPODetailScreen';
@@ -81,6 +82,11 @@ function AllotmentStackNavigator() {
         name="FamilyPortfolio"
         component={FamilyPortfolioScreen}
         options={{ title: 'Family Portfolio' }}
+      />
+      <AllotmentStack.Screen
+        name="ApplicationTimeline"
+        component={ApplicationTimelineScreen}
+        options={{ title: 'Application Timeline' }}
       />
     </AllotmentStack.Navigator>
   );
