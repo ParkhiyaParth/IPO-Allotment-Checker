@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Animated, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { GestureStateChangeEvent, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -23,12 +23,34 @@ const TABS: { key: IPOCatalogStatus; label: string }[] = [
 // How far (px) a horizontal drag must travel before it counts as a
 // deliberate "switch tabs" swipe rather than an accidental brush.
 const SWIPE_THRESHOLD_PX = 60;
+// How far (px) content slides in from before settling -- kept small so
+// the motion reads as a quick, smooth hand-off rather than a slow pan.
+const SLIDE_OFFSET_PX = 28;
 
 export function IPOListScreen({ navigation }: Props) {
   const [status, setStatus] = useState<IPOCatalogStatus>('open');
   const { data, isLoading, isError, refetch, isRefetching } = useIpoCatalog(status);
 
   const currentIndex = TABS.findIndex((t) => t.key === status);
+  const fade = useRef(new Animated.Value(1)).current;
+  const slide = useRef(new Animated.Value(0)).current;
+
+  // direction: +1 when the new tab is to the right (swiped left / tapped a
+  // later tab), -1 when it's to the left -- content fades out, swaps, then
+  // fades + slides in from that same side, using RN's own built-in Animated
+  // API (no extra native dependency, so this ships via OTA like the swipe
+  // gesture itself did).
+  const changeTab = (newStatus: IPOCatalogStatus, direction: 1 | -1) => {
+    if (newStatus === status) return;
+    Animated.timing(fade, { toValue: 0, duration: 100, useNativeDriver: true }).start(() => {
+      setStatus(newStatus);
+      slide.setValue(direction * SLIDE_OFFSET_PX);
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: true }),
+        Animated.timing(slide, { toValue: 0, duration: 180, useNativeDriver: true }),
+      ]).start();
+    });
+  };
 
   // activeOffsetX/failOffsetY let this only ever claim a predominantly
   // horizontal drag -- a vertical drag on the FlatList fails this gesture
@@ -39,24 +61,24 @@ export function IPOListScreen({ navigation }: Props) {
     .failOffsetY([-15, 15])
     .onEnd((event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
       if (event.translationX <= -SWIPE_THRESHOLD_PX && currentIndex < TABS.length - 1) {
-        setStatus(TABS[currentIndex + 1].key);
+        changeTab(TABS[currentIndex + 1].key, 1);
       } else if (event.translationX >= SWIPE_THRESHOLD_PX && currentIndex > 0) {
-        setStatus(TABS[currentIndex - 1].key);
+        changeTab(TABS[currentIndex - 1].key, -1);
       }
     });
 
   return (
     <View style={styles.container}>
       <View style={styles.tabRow}>
-        {TABS.map((tab) => (
-          <TouchableOpacity key={tab.key} onPress={() => setStatus(tab.key)}>
+        {TABS.map((tab, index) => (
+          <TouchableOpacity key={tab.key} onPress={() => changeTab(tab.key, index > currentIndex ? 1 : -1)}>
             <Text style={[styles.tabLabel, status === tab.key && styles.tabLabelActive]}>{tab.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <GestureDetector gesture={swipeGesture}>
-        <View style={styles.swipeArea}>
+        <Animated.View style={[styles.swipeArea, { opacity: fade, transform: [{ translateX: slide }] }]}>
           {isLoading ? (
             <SkeletonLoader />
           ) : isError ? (
@@ -90,7 +112,7 @@ export function IPOListScreen({ navigation }: Props) {
               refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
             />
           )}
-        </View>
+        </Animated.View>
       </GestureDetector>
     </View>
   );
