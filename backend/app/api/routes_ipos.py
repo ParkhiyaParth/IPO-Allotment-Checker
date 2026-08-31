@@ -3,20 +3,26 @@ from datetime import date, datetime, timezone
 from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import (
+    HistoricalOutcomeSummary,
     IPOCatalogDetail,
     IPOCatalogListResponse,
     IPOCatalogSummary,
     IPOSummary,
+    NewsHeadline,
+    NewsHeadlinesResponse,
     RecentIposResponse,
     SignalAccuracyBucket,
+    SimilarOutcomesResponse,
     SubscriptionCategory,
     TrackRecordResponse,
 )
 from app.services import (
     gmp_history_repository,
     ipo_catalog_service,
+    ipo_historical_repository,
     ipo_list_service,
     ipo_potential_service,
+    news_headlines_repository,
     signal_accuracy_repository,
 )
 from app.services.ipo_catalog_repository import CatalogRecord
@@ -135,6 +141,43 @@ async def get_ipo_catalog_detail(catalog_id: str) -> IPOCatalogDetail:
             applied=record.sub_retail_applied,
             times=(record.sub_retail_applied / record.sub_retail_offered) if record.sub_retail_offered else None,
         ),
+    )
+
+
+@router.get("/catalog/{catalog_id}/headlines", response_model=NewsHeadlinesResponse)
+async def get_ipo_headlines(catalog_id: str) -> NewsHeadlinesResponse:
+    record = ipo_catalog_service.get_by_id(catalog_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="IPO not found")
+    cached = news_headlines_repository.get(catalog_id)
+    return NewsHeadlinesResponse(
+        headlines=[
+            NewsHeadline(title=h.title, link=h.link, source=h.source, published_at=h.published_at)
+            for h in cached
+        ],
+        generated_at=datetime.now(timezone.utc),
+    )
+
+
+@router.get("/catalog/{catalog_id}/similar-outcomes", response_model=SimilarOutcomesResponse)
+async def get_ipo_similar_outcomes(catalog_id: str) -> SimilarOutcomesResponse:
+    record = ipo_catalog_service.get_by_id(catalog_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="IPO not found")
+    outcomes = ipo_historical_repository.get_similar_outcomes(record.gmp_percent, record.issue_size_cr)
+    return SimilarOutcomesResponse(
+        outcomes=[
+            HistoricalOutcomeSummary(
+                company_name=o.company_name,
+                listing_date=o.listing_date,
+                issue_size_cr=o.issue_size_cr,
+                gmp_percent_at_close=o.gmp_percent_at_close,
+                listing_gain_percent=o.listing_gain_percent,
+                current_gain_percent=o.current_gain_percent,
+            )
+            for o in outcomes
+        ],
+        generated_at=datetime.now(timezone.utc),
     )
 
 

@@ -22,6 +22,7 @@ async def test_get_headlines_parses_real_fixture(monkeypatch):
     assert first.title == "Sunshine Pictures IPO GMP Today: GMP indicates 21% premium listing"
     assert first.source == "India Infoline"
     assert first.published_at == "Wed, 19 Aug 2026 06:17:20 GMT"
+    assert first.link is not None and first.link.startswith("https://news.google.com/rss/articles/")
 
 
 async def test_get_headlines_respects_limit(monkeypatch):

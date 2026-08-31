@@ -82,3 +82,48 @@ def test_get_base_rate_with_no_filters_matches_everything_with_a_known_result():
 
     assert total == 2
     assert positive == 1
+
+
+def test_get_similar_outcomes_returns_the_matched_records_not_just_counts():
+    ipo_historical_repository.upsert_many(
+        [
+            _outcome(
+                id="hist-a",
+                company_name="Alpha Ltd",
+                gmp_percent_at_close=20.0,
+                issue_size_cr=100.0,
+                listing_gain_percent=15.0,
+            ),
+            # Far outside GMP tolerance -- must not be included.
+            _outcome(
+                id="hist-b",
+                company_name="Beta Ltd",
+                gmp_percent_at_close=90.0,
+                issue_size_cr=110.0,
+                listing_gain_percent=50.0,
+            ),
+        ]
+    )
+
+    result = ipo_historical_repository.get_similar_outcomes(gmp_percent=21.0, issue_size_cr=110.0)
+
+    assert [o.company_name for o in result] == ["Alpha Ltd"]
+
+
+def test_get_similar_outcomes_sorts_most_recent_first_and_respects_limit():
+    ipo_historical_repository.upsert_many(
+        [
+            _outcome(
+                id=f"hist-{i}",
+                company_name=f"Company {i}",
+                listing_date=f"2026-01-{i:02d}",
+                listing_gain_percent=5.0,
+            )
+            for i in range(1, 8)
+        ]
+    )
+
+    result = ipo_historical_repository.get_similar_outcomes(gmp_percent=None, issue_size_cr=None, limit=3)
+
+    assert len(result) == 3
+    assert [o.listing_date for o in result] == ["2026-01-07", "2026-01-06", "2026-01-05"]

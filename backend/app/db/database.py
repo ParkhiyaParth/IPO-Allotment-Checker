@@ -110,6 +110,16 @@ CREATE TABLE IF NOT EXISTS news_sentiment_cache (
     computed_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS news_headlines_cache (
+    catalog_id TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    link TEXT,
+    source TEXT,
+    published_at TEXT,
+    PRIMARY KEY (catalog_id, rank)
+);
+
 CREATE TABLE IF NOT EXISTS market_trend_cache (
     id TEXT PRIMARY KEY,
     index_symbol TEXT NOT NULL,

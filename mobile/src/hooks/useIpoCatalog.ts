@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchApplySignalTrackRecord, fetchIpoCatalog, fetchIpoCatalogDetail } from '../api/ipoCatalog';
+import {
+  fetchApplySignalTrackRecord,
+  fetchIpoCatalog,
+  fetchIpoCatalogDetail,
+  fetchIpoHeadlines,
+  fetchSimilarOutcomes,
+} from '../api/ipoCatalog';
 import type { IPOCatalogStatus } from '../types/api';
 
 // The backend itself only re-scrapes every 5min (market hours) / 2h
@@ -29,5 +35,19 @@ export function useApplySignalTrackRecord() {
   return useQuery({
     queryKey: ['ipos', 'applySignal', 'trackRecord'],
     queryFn: fetchApplySignalTrackRecord,
+  });
+}
+
+export function useIpoHeadlines(ipoId: string) {
+  return useQuery({
+    queryKey: ['ipos', 'catalog', 'headlines', ipoId],
+    queryFn: () => fetchIpoHeadlines(ipoId),
+  });
+}
+
+export function useSimilarOutcomes(ipoId: string) {
+  return useQuery({
+    queryKey: ['ipos', 'catalog', 'similarOutcomes', ipoId],
+    queryFn: () => fetchSimilarOutcomes(ipoId),
   });
 }

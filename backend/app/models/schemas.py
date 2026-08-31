@@ -131,6 +131,32 @@ class IPOCatalogListResponse(BaseModel):
     generated_at: datetime
 
 
+class NewsHeadline(BaseModel):
+    title: str
+    link: str | None = None
+    source: str | None = None
+    published_at: str | None = None
+
+
+class NewsHeadlinesResponse(BaseModel):
+    headlines: list[NewsHeadline]
+    generated_at: datetime
+
+
+class HistoricalOutcomeSummary(BaseModel):
+    company_name: str
+    listing_date: str | None = None
+    issue_size_cr: float | None = None
+    gmp_percent_at_close: float | None = None
+    listing_gain_percent: float | None = None
+    current_gain_percent: float | None = None
+
+
+class SimilarOutcomesResponse(BaseModel):
+    outcomes: list[HistoricalOutcomeSummary]
+    generated_at: datetime
+
+
 class SignalAccuracyBucket(BaseModel):
     total: int
     correct: int

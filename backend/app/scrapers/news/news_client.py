@@ -23,6 +23,7 @@ class NewsHeadline:
     title: str
     published_at: str | None  # RFC 2822 string as sent by the feed, unparsed
     source: str | None
+    link: str | None = None
 
 
 def _strip_source_suffix(title: str, source: str | None) -> str:
@@ -45,11 +46,13 @@ async def get_headlines(query: str, limit: int = _MAX_HEADLINES) -> list[NewsHea
         source_el = item.find("source")
         source = source_el.text if source_el is not None else None
         pub_date_el = item.find("pubDate")
+        link_el = item.find("link")
         headlines.append(
             NewsHeadline(
                 title=_strip_source_suffix(title_el.text, source),
                 published_at=pub_date_el.text if pub_date_el is not None else None,
                 source=source,
+                link=link_el.text if link_el is not None else None,
             )
         )
     return headlines

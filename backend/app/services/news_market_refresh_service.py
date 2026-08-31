@@ -18,6 +18,7 @@ from app.services import (
     ipo_catalog_service,
     ipo_historical_backfill_service,
     market_trend_repository,
+    news_headlines_repository,
     news_sentiment_repository,
 )
 from app.utils import sentiment
@@ -51,6 +52,7 @@ async def _refresh_news_sentiment() -> None:
             headlines = await news_client.get_headlines(f"{record.company_name} {_NEWS_QUERY_SUFFIX}")
             score = sentiment.score_headlines([h.title for h in headlines])
             news_sentiment_repository.upsert(record.id, score, len(headlines))
+            news_headlines_repository.replace_all(record.id, headlines)
         except Exception:
             logger.exception("News sentiment refresh failed for %s", record.company_name)
 

@@ -1,10 +1,10 @@
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { GmpSparkline } from '../components/GmpSparkline';
 import { PotentialBadge } from '../components/PotentialBadge';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { useIpoCatalogDetail } from '../hooks/useIpoCatalog';
+import { useIpoCatalogDetail, useIpoHeadlines, useSimilarOutcomes } from '../hooks/useIpoCatalog';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import type { IPOsStackParamList } from '../navigation/types';
@@ -54,6 +54,10 @@ function promptBrokerChoice(companyName: string, reason: string | null) {
   ]);
 }
 
+function openUrl(url: string) {
+  Linking.openURL(url).catch(() => {});
+}
+
 function SubscriptionRow({ label, category }: { label: string; category: SubscriptionCategory }) {
   return (
     <View style={styles.tableRow}>
@@ -68,6 +72,8 @@ function SubscriptionRow({ label, category }: { label: string; category: Subscri
 export function IPODetailScreen({ route }: Props) {
   const { ipoId } = route.params;
   const { data, isLoading, isError } = useIpoCatalogDetail(ipoId);
+  const { data: headlines } = useIpoHeadlines(ipoId);
+  const { data: similarOutcomes } = useSimilarOutcomes(ipoId);
 
   if (isLoading) return <SkeletonLoader />;
   if (isError || !data) {
@@ -126,6 +132,44 @@ export function IPODetailScreen({ route }: Props) {
           reasons={data.ipo_potential_reasons}
         />
       </View>
+
+      {headlines != null && headlines.length > 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Headlines</Text>
+          {headlines.map((headline, i) => (
+            <TouchableOpacity
+              key={i}
+              disabled={headline.link == null}
+              onPress={() => headline.link != null && openUrl(headline.link)}
+              style={styles.headlineRow}
+            >
+              <Text style={styles.headlineTitle}>{headline.title}</Text>
+              {headline.source != null ? <Text style={styles.headlineSource}>{headline.source}</Text> : null}
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
+
+      {similarOutcomes != null && similarOutcomes.length > 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Similar Past IPOs</Text>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.tableHeaderCell]}>Company</Text>
+            <Text style={[styles.tableCell, styles.tableHeaderCell]}>Listed</Text>
+            <Text style={[styles.tableCell, styles.tableHeaderCell]}>Gain</Text>
+          </View>
+          {similarOutcomes.map((outcome, i) => {
+            const gain = outcome.listing_gain_percent ?? outcome.current_gain_percent;
+            return (
+              <View style={styles.tableRow} key={i}>
+                <Text style={styles.tableCell}>{outcome.company_name}</Text>
+                <Text style={styles.tableCell}>{fmt(outcome.listing_date)}</Text>
+                <Text style={styles.tableCell}>{gain != null ? `${gain.toFixed(0)}%` : '—'}</Text>
+              </View>
+            );
+          })}
+        </View>
+      ) : null}
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>IPO Details</Text>
@@ -254,6 +298,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: spacing.md },
+  headlineRow: { paddingVertical: spacing.xs },
+  headlineTitle: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  headlineSource: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   fieldRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
   fieldLabel: { fontSize: 13, color: colors.textSecondary },
   fieldValue: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },

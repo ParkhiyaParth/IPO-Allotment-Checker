@@ -87,6 +87,32 @@ export interface IPOCatalogListResponse {
   generated_at: string;
 }
 
+export interface NewsHeadline {
+  title: string;
+  link: string | null;
+  source: string | null;
+  published_at: string | null;
+}
+
+export interface NewsHeadlinesResponse {
+  headlines: NewsHeadline[];
+  generated_at: string;
+}
+
+export interface HistoricalOutcomeSummary {
+  company_name: string;
+  listing_date: string | null;
+  issue_size_cr: number | null;
+  gmp_percent_at_close: number | null;
+  listing_gain_percent: number | null;
+  current_gain_percent: number | null;
+}
+
+export interface SimilarOutcomesResponse {
+  outcomes: HistoricalOutcomeSummary[];
+  generated_at: string;
+}
+
 export interface SignalAccuracyBucket {
   total: number;
   correct: number;

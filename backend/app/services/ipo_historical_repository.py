@@ -65,18 +65,17 @@ def get_all() -> list[HistoricalOutcome]:
         conn.close()
 
 
-def get_base_rate(
+def _match_outcomes(
     gmp_percent: float | None,
     issue_size_cr: float | None,
     gmp_tolerance: float = 10.0,
     size_ratio_tolerance: float = 2.0,
-) -> tuple[int, int]:
-    """Returns (sample_count, positive_count) for past IPOs whose
-    GMP-at-close and issue size were "similar" to the given values --
-    within +/-gmp_tolerance percentage points, and within a
+) -> list[HistoricalOutcome]:
+    """Past IPOs whose GMP-at-close and issue size were "similar" to the
+    given values -- within +/-gmp_tolerance percentage points, and within a
     size_ratio_tolerance multiple either way. Either filter is skipped
     (matches everything) when the corresponding input is None, so a record
-    still gets a (weaker) base rate even with partial data."""
+    still gets a (weaker) match set even with partial data."""
     outcomes = get_all()
     matches = []
     for o in outcomes:
@@ -90,13 +89,39 @@ def get_base_rate(
             if ratio > size_ratio_tolerance or ratio < 1 / size_ratio_tolerance:
                 continue
         matches.append(o)
+    return matches
 
+
+def get_base_rate(
+    gmp_percent: float | None,
+    issue_size_cr: float | None,
+    gmp_tolerance: float = 10.0,
+    size_ratio_tolerance: float = 2.0,
+) -> tuple[int, int]:
+    """Returns (sample_count, positive_count) for past IPOs matched by
+    _match_outcomes -- the aggregate base rate ipo_potential_service scores
+    on."""
+    matches = _match_outcomes(gmp_percent, issue_size_cr, gmp_tolerance, size_ratio_tolerance)
     positive = sum(
         1
         for o in matches
         if (o.listing_gain_percent if o.listing_gain_percent is not None else o.current_gain_percent) > 0
     )
     return len(matches), positive
+
+
+def get_similar_outcomes(
+    gmp_percent: float | None,
+    issue_size_cr: float | None,
+    gmp_tolerance: float = 10.0,
+    size_ratio_tolerance: float = 2.0,
+    limit: int = 5,
+) -> list[HistoricalOutcome]:
+    """The actual matched past IPOs behind get_base_rate's aggregate
+    percentage, for display -- most recently listed first."""
+    matches = _match_outcomes(gmp_percent, issue_size_cr, gmp_tolerance, size_ratio_tolerance)
+    matches.sort(key=lambda o: o.listing_date or "", reverse=True)
+    return matches[:limit]
 
 
 def _row_to_outcome(row) -> HistoricalOutcome:

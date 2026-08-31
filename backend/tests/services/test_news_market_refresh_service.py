@@ -5,6 +5,7 @@ from app.scrapers.news.news_client import NewsHeadline
 from app.services import (
     ipo_catalog_repository,
     market_trend_repository,
+    news_headlines_repository,
     news_market_refresh_service,
     news_sentiment_repository,
 )
@@ -52,7 +53,11 @@ async def test_refresh_daily_fetches_news_only_for_non_closed_ipos(monkeypatch):
 
     async def fake_get_headlines(query, limit=20):
         queried_companies.append(query)
-        return [NewsHeadline(title="Great news for the IPO", published_at=None, source=None)]
+        return [
+            NewsHeadline(
+                title="Great news for the IPO", published_at=None, source=None, link="https://example.com/a"
+            )
+        ]
 
     async def fake_indices():
         return []
@@ -73,6 +78,10 @@ async def test_refresh_daily_fetches_news_only_for_non_closed_ipos(monkeypatch):
     assert cached is not None
     assert cached.headline_count == 1
     assert cached.sentiment_score is not None
+
+    cached_headlines = news_headlines_repository.get("catalog-open")
+    assert [h.title for h in cached_headlines] == ["Great news for the IPO"]
+    assert cached_headlines[0].link == "https://example.com/a"
 
 
 async def test_refresh_daily_survives_news_fetch_failure_for_one_company(monkeypatch):
