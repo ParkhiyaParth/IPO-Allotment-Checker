@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { radii, spacing } from '../theme/spacing';
 import type { IpoPotentialLabel } from '../types/api';
@@ -37,16 +38,21 @@ export function PotentialBadge({
       onPress={() => setExpanded((e) => !e)}
       activeOpacity={0.8}
     >
-      <View style={styles.headerRow}>
-        <View style={styles.titleColumn}>
+      <Animated.View style={styles.headerRow} layout={LinearTransition.duration(200)}>
+        <Animated.View style={styles.titleColumn} layout={LinearTransition.duration(200)}>
           <Text style={[styles.title, { color: fg }]}>{LABELS[label]}</Text>
           <Text style={styles.subtitle}>IPO Potential — research-based estimate</Text>
-        </View>
+        </Animated.View>
         {score != null ? <Text style={[styles.score, { color: fg }]}>{score}</Text> : null}
-      </View>
+      </Animated.View>
 
       {expanded ? (
-        <View style={styles.reasonsBlock}>
+        <Animated.View
+          style={styles.reasonsBlock}
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(120)}
+          layout={LinearTransition.duration(200)}
+        >
           {(reasons ?? []).map((reason, i) => (
             <Text key={i} style={styles.reasonText}>
               • {reason}
@@ -55,9 +61,16 @@ export function PotentialBadge({
           <Text style={styles.disclaimer}>
             Unofficial estimate from historical outcomes, news, and market data — not investment advice.
           </Text>
-        </View>
+        </Animated.View>
       ) : (
-        <Text style={styles.tapHint}>Tap for details</Text>
+        <Animated.Text
+          style={styles.tapHint}
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(120)}
+          layout={LinearTransition.duration(200)}
+        >
+          Tap for details
+        </Animated.Text>
       )}
     </TouchableOpacity>
   );

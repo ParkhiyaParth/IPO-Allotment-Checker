@@ -1,8 +1,9 @@
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { GmpSparkline } from '../components/GmpSparkline';
 import { PotentialBadge } from '../components/PotentialBadge';
+import { PressableScale } from '../components/PressableScale';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useIpoCatalogDetail } from '../hooks/useIpoCatalog';
 import { colors } from '../theme/colors';
@@ -108,13 +109,12 @@ export function IPODetailScreen({ route }: Props) {
             ) : null}
           </View>
           {data.apply_signal === 'strong_apply' ? (
-            <TouchableOpacity
+            <PressableScale
               style={styles.applyNowButton}
               onPress={() => promptBrokerChoice(data.company_name, data.apply_signal_reason)}
-              activeOpacity={0.7}
             >
               <Text style={styles.applyNowButtonText}>APPLY NOW</Text>
-            </TouchableOpacity>
+            </PressableScale>
           ) : null}
         </View>
       ) : null}

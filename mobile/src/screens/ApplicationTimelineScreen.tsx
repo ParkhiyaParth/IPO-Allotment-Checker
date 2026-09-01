@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { EmptyState } from '../components/EmptyState';
+import { PressableScale } from '../components/PressableScale';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import {
   useApplicationTimeline,
@@ -79,21 +80,17 @@ function CandidateRow({
       </View>
       <View style={styles.applyRow}>
         <View style={styles.lotStepper}>
-          <TouchableOpacity
-            style={styles.lotButton}
-            onPress={() => setLots((l) => Math.max(1, l - 1))}
-            activeOpacity={0.7}
-          >
+          <PressableScale style={styles.lotButton} onPress={() => setLots((l) => Math.max(1, l - 1))}>
             <Text style={styles.lotButtonText}>−</Text>
-          </TouchableOpacity>
+          </PressableScale>
           <Text style={styles.lotCount}>{lots} lot{lots > 1 ? 's' : ''}</Text>
-          <TouchableOpacity style={styles.lotButton} onPress={() => setLots((l) => l + 1)} activeOpacity={0.7}>
+          <PressableScale style={styles.lotButton} onPress={() => setLots((l) => l + 1)}>
             <Text style={styles.lotButtonText}>+</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
-        <TouchableOpacity style={styles.applyButton} onPress={() => onApply(lots)} activeOpacity={0.7}>
+        <PressableScale style={styles.applyButton} onPress={() => onApply(lots)}>
           <Text style={styles.applyButtonText}>Mark Applied</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </View>
   );

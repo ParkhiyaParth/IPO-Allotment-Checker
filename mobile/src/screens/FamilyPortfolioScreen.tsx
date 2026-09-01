@@ -1,5 +1,6 @@
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { EmptyState } from '../components/EmptyState';
+import { PressableScale } from '../components/PressableScale';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useFamilyPortfolio, type FamilyPortfolioNudge } from '../hooks/useFamilyPortfolio';
 import { colors } from '../theme/colors';
@@ -21,9 +22,9 @@ function NudgeRow({ nudge, onMarkApplied }: { nudge: FamilyPortfolioNudge; onMar
           🚀 Strong apply signal{nudge.closeDate ? ` · closes ${nudge.closeDate}` : ''}
         </Text>
       </View>
-      <TouchableOpacity style={styles.markButton} onPress={onMarkApplied} activeOpacity={0.7}>
+      <PressableScale style={styles.markButton} onPress={onMarkApplied}>
         <Text style={styles.markButtonText}>Mark Applied</Text>
-      </TouchableOpacity>
+      </PressableScale>
     </View>
   );
 }
