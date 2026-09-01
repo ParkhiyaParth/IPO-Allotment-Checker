@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-=======
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
->>>>>>> dev_parth
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { GmpSparkline } from '../components/GmpSparkline';
