@@ -39,7 +39,18 @@ const EASE_OUT = Easing.out(Easing.cubic);
 
 export function IPOListScreen({ navigation }: Props) {
   const [status, setStatus] = useState<IPOCatalogStatus>('open');
-  const { data, isLoading, isError, refetch, isRefetching } = useIpoCatalog(status);
+
+  // Fetch all three tabs up front (each is its own react-query cache entry,
+  // so these run in parallel) instead of only the active one. Otherwise the
+  // first-ever swipe to a given tab in a session hits a real network
+  // round-trip and shows a loading skeleton mid-swipe -- which looks broken
+  // next to a hand-tuned drag animation, even though the animation itself
+  // is working correctly.
+  const openQuery = useIpoCatalog('open');
+  const upcomingQuery = useIpoCatalog('upcoming');
+  const closedQuery = useIpoCatalog('closed');
+  const queriesByStatus = { open: openQuery, upcoming: upcomingQuery, closed: closedQuery };
+  const { data, isLoading, isError, refetch, isRefetching } = queriesByStatus[status];
 
   const currentIndex = TABS.findIndex((t) => t.key === status);
   const fade = useSharedValue(1);
