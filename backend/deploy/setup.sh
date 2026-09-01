@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# One-time bootstrap for a fresh Oracle Cloud Always Free instance
+# One-time bootstrap for a fresh Ubuntu Oracle Cloud Always Free instance
 # (VM.Standard.E2.1.Micro: 1 OCPU, 1GB RAM). Run this once after creating
 # the instance and SSH-ing in as ubuntu. Re-running is mostly safe but not
 # the point — see deploy.sh for ongoing updates after this.
+#
+# Ubuntu-specific (apt-get, iptables) -- the current production backend
+# instead runs on an Oracle Linux (dnf, firewalld) box set up by hand with
+# the equivalent steps (Python 3.11 via `dnf module install`, Caddy via the
+# @caddy/caddy copr repo, SELinux context fixes for systemd executing from
+# $HOME). This script is kept for reference/for standing up a future Ubuntu
+# instance, but wasn't used for that box.
 set -euo pipefail
 
 REPO_URL="https://github.com/ParkhiyaParth/IPO-Allotment-Checker.git"

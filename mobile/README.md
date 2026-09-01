@@ -10,9 +10,22 @@ npm install
 npx expo start
 ```
 
-Set `EXPO_PUBLIC_API_BASE_URL` in `.env` to your PC's LAN IP (e.g.
-`http://192.168.3.149:8000`) so a phone on the same Wi-Fi can reach the
-backend. Scan the QR code with Expo Go.
+`.env`'s `EXPO_PUBLIC_API_BASE_URL` points at the production backend (see
+root `README.md`) by default, so this works from any network without
+further setup. For LAN-only testing against a locally-run backend instead,
+point it at your PC's LAN IP (e.g. `http://192.168.3.149:8000`) and make
+sure the phone's on the same Wi-Fi.
+
+### Live-testing in Expo Go without keeping your PC running
+
+A second, dedicated Oracle Cloud Always Free instance runs the Metro dev
+server as a `systemd` service (`ipo-mobile-dev`) 24/7, independent of any
+local machine — `.github/workflows/deploy-dev-server.yml` SSHs in and
+pulls + restarts it on every push to `main` touching `mobile/**`. Connect
+Expo Go to `exp://<that instance's public IP>:8081`; no tunnel/ngrok
+needed since the instance already has a public IP. This is purely a
+preview tool for testing in-progress code before it's built into a real
+app — it plays no part in the OTA update pipeline below.
 
 ## Building a real installable app (EAS Build)
 
@@ -32,12 +45,12 @@ When it finishes, `eas build:list` or the printed URL gives a download link
 from this source once).
 
 **Important**: `EXPO_PUBLIC_API_BASE_URL` is baked into the build at
-build-time from `eas.json`'s `build.preview.env` (cloud builds don't read
-your local `.env`). It's currently set to this dev PC's LAN IP. That means
-the installed APK will only work when: the backend is running on this PC,
-and the phone is on the same Wi-Fi network as it. There's no public
-deployment yet — see "Going further" below if you want the app usable from
-anywhere.
+build-time from `eas.json`'s `build.preview.env`, and OTA updates instead
+read it from the EAS dashboard's per-environment variables (`eas env:list
+--environment preview`) — cloud builds and `eas update` don't read your
+local `.env`, so both need updating (not just `eas.json`) if the backend
+ever moves. It currently points at the production backend (see root
+`README.md`), so the installed APK works from any network.
 
 ### iOS — needs your own Apple Developer account first
 
@@ -55,11 +68,3 @@ distribution certificate or reuse one. Once it finishes, EAS gives you an
 install link (or a QR code) that registers your specific iPhone for ad-hoc
 distribution and lets you install directly, no TestFlight needed for a
 single device.
-
-## Going further: using the app off your home network
-
-Right now the backend only runs on this dev PC and the app is hardcoded to
-its LAN IP. To use the app away from home, the backend needs to run
-somewhere always-reachable (a small cloud VM, Railway/Render/Fly.io, etc.),
-and `EXPO_PUBLIC_API_BASE_URL` (in `eas.json`) would need to point at that
-public address instead. Not set up yet — ask if you want this next.

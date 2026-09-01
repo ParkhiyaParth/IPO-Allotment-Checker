@@ -25,34 +25,29 @@ reachable from your phone (LAN IP, tunnel, or the production URL below).
 
 ## Production deployment (backend)
 
-Runs on an Oracle Cloud Always Free instance (`VM.Standard.E2.1.Micro` — 1
-OCPU, 1GB RAM is enough; this backend is small and I/O-bound, not CPU/RAM
-heavy). Caddy handles HTTPS via a free `sslip.io` hostname (Let's Encrypt
-won't issue a cert for a bare IP, so this is the simplest way to get real
-HTTPS without owning a domain) and reverse-proxies to uvicorn, which only
-listens on `127.0.0.1` — never exposed directly to the internet.
+Runs on an Oracle Cloud Always Free instance, sharing a box with the mobile
+dev server (see `mobile/README.md`'s "Live-testing in Expo Go" section) —
+big enough (several GB RAM) for both, unlike the original single-purpose
+1GB instance this backend started on. Caddy handles HTTPS via a free
+`sslip.io` hostname (Let's Encrypt won't issue a cert for a bare IP, so
+this is the simplest way to get real HTTPS without owning a domain) and
+reverse-proxies to uvicorn, which only listens on `127.0.0.1` — never
+exposed directly to the internet.
 
-**One-time setup**, after creating the instance and SSH-ing in:
-```
-git clone https://github.com/ParkhiyaParth/IPO-Allotment-Checker.git
-bash IPO-Allotment-Checker/backend/deploy/setup.sh
-```
-That installs Python, Caddy, a 2GB swapfile, clones the repo, sets up the
-venv, and installs+starts the `ipo-backend` systemd service. It'll then
-print two things you still have to do by hand:
-1. Edit `backend/deploy/Caddyfile` with the instance's real IP (dashes
-   instead of dots) and reload Caddy.
-2. Open ports 80/443 in the **Oracle Cloud Security List** for that
-   instance's subnet — this is a cloud-network-level firewall separate
-   from the OS's own, and blocks traffic regardless of OS firewall rules.
+**One-time setup**: `backend/deploy/setup.sh` bootstraps a fresh **Ubuntu**
+instance (apt-get, iptables) — see the comment at its top. The current
+instance instead runs **Oracle Linux** (dnf, firewalld, SELinux), set up
+by hand with the equivalent steps rather than this script; treat it as a
+reference for the Ubuntu path, not as literally what's live.
 
 **Ongoing deploys**: pushing to `main` (touching anything under `backend/`)
 triggers `.github/workflows/deploy-backend.yml`, which SSHs into the server
 and runs `backend/deploy/deploy.sh` (git pull, reinstall deps, restart the
-service). Requires these repo secrets (GitHub repo → Settings → Secrets and
-variables → Actions):
+service) — this script itself is OS-agnostic. Requires these repo secrets
+(GitHub repo → Settings → Secrets and variables → Actions):
 - `DEPLOY_HOST` — the instance's public IP
-- `DEPLOY_USER` — `ubuntu`
+- `DEPLOY_USER` — `opc` (Oracle Linux's default cloud-image user; `ubuntu`
+  for a Ubuntu instance)
 - `DEPLOY_SSH_KEY` — the private key contents (the `.key` file from Oracle)
 
 ## Production updates (mobile)
