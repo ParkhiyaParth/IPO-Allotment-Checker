@@ -1,8 +1,8 @@
 # sslip.io resolves this hostname straight back to the IP embedded in it
-# (129-154-232-161 -> 129.154.232.161), no signup/DNS setup needed — enough
+# (129-154-251-176 -> 129.154.251.176), no signup/DNS setup needed — enough
 # for Caddy to get a real Let's Encrypt certificate, since Let's Encrypt
 # won't issue one for a bare IP address. If this ever moves to a new
 # instance, swap the IP here (dashes instead of dots).
-129-154-232-161.sslip.io {
+129-154-251-176.sslip.io {
 	reverse_proxy 127.0.0.1:8000
 }
