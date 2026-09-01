@@ -1,4 +1,6 @@
+import { memo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { radii, spacing } from '../theme/spacing';
 import { maskPan } from '../utils/panMask';
@@ -11,7 +13,7 @@ interface ResultRowProps {
   result?: AllotmentResultItem;
 }
 
-export function ResultRow({ label, pan, result }: ResultRowProps) {
+export const ResultRow = memo(function ResultRow({ label, pan, result }: ResultRowProps) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -20,21 +22,25 @@ export function ResultRow({ label, pan, result }: ResultRowProps) {
           <Text style={styles.pan}>{maskPan(pan)}</Text>
         </View>
         {result ? (
-          <StatusBadge status={result.status} />
+          <Animated.View key="result" entering={FadeIn.duration(200)} exiting={FadeOut.duration(120)}>
+            <StatusBadge status={result.status} />
+          </Animated.View>
         ) : (
-          <View style={styles.checkingRow}>
+          <Animated.View key="checking" style={styles.checkingRow} exiting={FadeOut.duration(120)}>
             <ActivityIndicator size="small" color={colors.primary} />
             <Text style={styles.checkingText}>Checking…</Text>
-          </View>
+          </Animated.View>
         )}
       </View>
 
       {result?.status === 'ALLOTTED' && result.shares_allotted ? (
-        <Text style={styles.detail}>{result.shares_allotted} shares allotted</Text>
+        <Animated.Text style={styles.detail} entering={FadeIn.duration(200)}>
+          {result.shares_allotted} shares allotted
+        </Animated.Text>
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

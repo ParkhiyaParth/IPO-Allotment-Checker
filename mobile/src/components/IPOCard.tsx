@@ -1,10 +1,12 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { memo } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { radii, spacing } from '../theme/spacing';
 import type { ApplySignal, IPOCatalogStatus, IPOCatalogSummary } from '../types/api';
 import { brokerLabel, openBrokerApp } from '../utils/brokerLinks';
 import { GmpSparkline } from './GmpSparkline';
 import { PotentialBadge } from './PotentialBadge';
+import { PressableScale } from './PressableScale';
 
 function formatDate(isoDate: string | null): string {
   if (!isoDate) return '—';
@@ -115,19 +117,18 @@ function ApplySignalBanner({ ipo }: { ipo: IPOCatalogSummary }) {
         ) : null}
       </View>
       {ipo.apply_signal === 'strong_apply' ? (
-        <TouchableOpacity
+        <PressableScale
           style={styles.applyNowButton}
           onPress={() => promptBrokerChoice(ipo.company_name, ipo.apply_signal_reason)}
-          activeOpacity={0.7}
         >
           <Text style={styles.applyNowButtonText}>APPLY NOW</Text>
-        </TouchableOpacity>
+        </PressableScale>
       ) : null}
     </View>
   );
 }
 
-export function IPOCard({
+export const IPOCard = memo(function IPOCard({
   ipo,
   onView,
   onCheckAllotment,
@@ -210,18 +211,18 @@ export function IPOCard({
       ) : null}
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.viewButton} onPress={onView} activeOpacity={0.7}>
+        <PressableScale style={styles.viewButton} onPress={onView}>
           <Text style={styles.viewButtonText}>VIEW DETAILS</Text>
-        </TouchableOpacity>
+        </PressableScale>
         {onCheckAllotment ? (
-          <TouchableOpacity style={styles.allotmentButton} onPress={onCheckAllotment} activeOpacity={0.7}>
+          <PressableScale style={styles.allotmentButton} onPress={onCheckAllotment}>
             <Text style={styles.allotmentButtonText}>ALLOTMENT</Text>
-          </TouchableOpacity>
+          </PressableScale>
         ) : null}
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

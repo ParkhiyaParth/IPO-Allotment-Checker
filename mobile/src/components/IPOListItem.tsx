@@ -1,4 +1,6 @@
+import { memo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { radii, spacing } from '../theme/spacing';
 import type { IPOSummary } from '../types/api';
@@ -11,23 +13,25 @@ function formatDate(isoDate: string): string {
   });
 }
 
-export function IPOListItem({ ipo, onPress }: { ipo: IPOSummary; onPress: () => void }) {
+export const IPOListItem = memo(function IPOListItem({ ipo, onPress }: { ipo: IPOSummary; onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.header}>
-        <Text style={styles.name}>{ipo.company_name}</Text>
-        {!ipo.automation_supported ? (
-          <View style={styles.manualBadge}>
-            <Text style={styles.manualBadgeText}>Manual</Text>
-          </View>
-        ) : null}
-      </View>
-      <Text style={styles.meta}>
-        Allotment finalized {formatDate(ipo.allotment_date)} · {ipo.registrar}
-      </Text>
-    </TouchableOpacity>
+    <Animated.View entering={FadeIn.duration(220)}>
+      <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+        <View style={styles.header}>
+          <Text style={styles.name}>{ipo.company_name}</Text>
+          {!ipo.automation_supported ? (
+            <View style={styles.manualBadge}>
+              <Text style={styles.manualBadgeText}>Manual</Text>
+            </View>
+          ) : null}
+        </View>
+        <Text style={styles.meta}>
+          Allotment finalized {formatDate(ipo.allotment_date)} · {ipo.registrar}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

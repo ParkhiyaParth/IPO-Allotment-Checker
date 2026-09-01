@@ -2,6 +2,7 @@ import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { PANListItem } from '../components/PANListItem';
+import { PressableScale } from '../components/PressableScale';
 import { useDevicePanSync } from '../hooks/useDevicePanSync';
 import { usePanProfiles } from '../hooks/usePanProfiles';
 import { colors } from '../theme/colors';
@@ -33,12 +34,9 @@ export function PANListScreen({ navigation }: Props) {
             <Text style={styles.syncLink}>Zero-Tap Auto-Check: {isOptedIn ? 'On' : 'Off'} →</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate('AddEditPAN', undefined)}
-        >
+        <PressableScale style={styles.addButton} onPress={() => navigation.navigate('AddEditPAN', undefined)}>
           <Text style={styles.addButtonText}>+ Add</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
 
       {isLoading ? null : profiles.length === 0 ? (

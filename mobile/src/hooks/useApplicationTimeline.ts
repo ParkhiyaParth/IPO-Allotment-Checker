@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { appliedMarksStore, type AppliedEntry } from '../storage/appliedMarksStore';
 import type { ApplySignal, IpoPotentialLabel } from '../types/api';
@@ -58,75 +59,80 @@ export function useApplicationTimeline() {
   const isLoading = openCatalog.isLoading || upcomingCatalog.isLoading || appliedQuery.isLoading;
   const isError = openCatalog.isError || upcomingCatalog.isError;
 
-  const allApplied = Object.values(appliedQuery.data ?? {});
-  const candidateIpos = [...(openCatalog.data ?? []), ...(upcomingCatalog.data ?? [])].filter(
-    (ipo) =>
-      ipo.linked_registrar_ipo_id != null &&
-      (ipo.apply_signal === 'strong_apply' ||
-        ipo.ipo_potential_label === 'strong_potential' ||
-        ipo.ipo_potential_label === 'promising'),
-  );
+  const openData = openCatalog.data;
+  const upcomingData = upcomingCatalog.data;
 
-  const todayIso = todayLocal();
+  const panTimelines: PanTimeline[] = useMemo(() => {
+    const allApplied = Object.values(appliedQuery.data ?? {});
+    const candidateIpos = [...(openData ?? []), ...(upcomingData ?? [])].filter(
+      (ipo) =>
+        ipo.linked_registrar_ipo_id != null &&
+        (ipo.apply_signal === 'strong_apply' ||
+          ipo.ipo_potential_label === 'strong_potential' ||
+          ipo.ipo_potential_label === 'promising'),
+    );
 
-  const panTimelines: PanTimeline[] = profiles.map((profile) => {
-    const pendingRaw = allApplied.filter((e) => e.panId === profile.id);
-    const pending: PendingApplication[] = pendingRaw
-      .map((e) => ({ ...e, fundsFreeBy: e.boaDate ? addDays(e.boaDate, FUNDS_FREE_BUFFER_DAYS) : null }))
-      // Once funds are known to be free, this no longer constrains the
-      // timeline -- allotted money is now shares, non-allotted is
-      // refunded, either way it stops "blocking" a future application.
-      .filter((e) => e.fundsFreeBy == null || e.fundsFreeBy >= todayIso);
+    const todayIso = todayLocal();
 
-    const knownFreeDates = pending.map((e) => e.fundsFreeBy).filter((d): d is string => d != null);
-    const nextAvailableDate = knownFreeDates.length > 0 ? knownFreeDates.slice().sort().slice(-1)[0] : null;
-    const hasUnknownPending = pending.some((e) => e.fundsFreeBy == null);
+    return profiles.map((profile) => {
+      const pendingRaw = allApplied.filter((e) => e.panId === profile.id);
+      const pending: PendingApplication[] = pendingRaw
+        .map((e) => ({ ...e, fundsFreeBy: e.boaDate ? addDays(e.boaDate, FUNDS_FREE_BUFFER_DAYS) : null }))
+        // Once funds are known to be free, this no longer constrains the
+        // timeline -- allotted money is now shares, non-allotted is
+        // refunded, either way it stops "blocking" a future application.
+        .filter((e) => e.fundsFreeBy == null || e.fundsFreeBy >= todayIso);
 
-    const appliedIpoIds = new Set(pendingRaw.map((e) => e.ipoId));
+      const knownFreeDates = pending.map((e) => e.fundsFreeBy).filter((d): d is string => d != null);
+      const nextAvailableDate = knownFreeDates.length > 0 ? knownFreeDates.slice().sort().slice(-1)[0] : null;
+      const hasUnknownPending = pending.some((e) => e.fundsFreeBy == null);
 
-    const candidates: ApplyCandidate[] = candidateIpos
-      .filter((ipo) => !appliedIpoIds.has(ipo.linked_registrar_ipo_id as string))
-      .map((ipo) => {
-        let fundsStatus: ApplyCandidate['fundsStatus'];
-        let conflictWith: PendingApplication | null = null;
+      const appliedIpoIds = new Set(pendingRaw.map((e) => e.ipoId));
 
-        if (!ipo.close_date || hasUnknownPending) {
-          fundsStatus = 'unknown';
-        } else if (!nextAvailableDate || nextAvailableDate <= ipo.close_date) {
-          fundsStatus = 'ok';
-        } else {
-          fundsStatus = 'conflict';
-          conflictWith = pending.find((e) => e.fundsFreeBy === nextAvailableDate) ?? null;
-        }
+      const candidates: ApplyCandidate[] = candidateIpos
+        .filter((ipo) => !appliedIpoIds.has(ipo.linked_registrar_ipo_id as string))
+        .map((ipo) => {
+          let fundsStatus: ApplyCandidate['fundsStatus'];
+          let conflictWith: PendingApplication | null = null;
 
-        return {
-          ipoId: ipo.linked_registrar_ipo_id as string,
-          companyName: ipo.company_name,
-          closeDate: ipo.close_date,
-          boaDate: ipo.boa_date,
-          potentialLabel: ipo.ipo_potential_label,
-          applySignal: ipo.apply_signal,
-          reason: ipo.apply_signal_reason ?? ipo.ipo_potential_reasons?.[0] ?? null,
-          lotSize: ipo.lot_size,
-          issuePrice: ipo.issue_price,
-          fundsStatus,
-          conflictWith,
-        };
-      })
-      // Best opportunities first (strong signal ahead of merely
-      // "promising"), then soonest-closing as the tiebreak -- this order
-      // itself is the prioritization the user's asking for when two good
-      // IPOs' windows collide.
-      .sort((a, b) => {
-        const rank = (c: ApplyCandidate) =>
-          c.applySignal === 'strong_apply' || c.potentialLabel === 'strong_potential' ? 0 : 1;
-        const byRank = rank(a) - rank(b);
-        if (byRank !== 0) return byRank;
-        return (a.closeDate ?? '9999-99-99').localeCompare(b.closeDate ?? '9999-99-99');
-      });
+          if (!ipo.close_date || hasUnknownPending) {
+            fundsStatus = 'unknown';
+          } else if (!nextAvailableDate || nextAvailableDate <= ipo.close_date) {
+            fundsStatus = 'ok';
+          } else {
+            fundsStatus = 'conflict';
+            conflictWith = pending.find((e) => e.fundsFreeBy === nextAvailableDate) ?? null;
+          }
 
-    return { panId: profile.id, panName: profile.name, pending, nextAvailableDate, candidates };
-  });
+          return {
+            ipoId: ipo.linked_registrar_ipo_id as string,
+            companyName: ipo.company_name,
+            closeDate: ipo.close_date,
+            boaDate: ipo.boa_date,
+            potentialLabel: ipo.ipo_potential_label,
+            applySignal: ipo.apply_signal,
+            reason: ipo.apply_signal_reason ?? ipo.ipo_potential_reasons?.[0] ?? null,
+            lotSize: ipo.lot_size,
+            issuePrice: ipo.issue_price,
+            fundsStatus,
+            conflictWith,
+          };
+        })
+        // Best opportunities first (strong signal ahead of merely
+        // "promising"), then soonest-closing as the tiebreak -- this order
+        // itself is the prioritization the user's asking for when two good
+        // IPOs' windows collide.
+        .sort((a, b) => {
+          const rank = (c: ApplyCandidate) =>
+            c.applySignal === 'strong_apply' || c.potentialLabel === 'strong_potential' ? 0 : 1;
+          const byRank = rank(a) - rank(b);
+          if (byRank !== 0) return byRank;
+          return (a.closeDate ?? '9999-99-99').localeCompare(b.closeDate ?? '9999-99-99');
+        });
+
+      return { panId: profile.id, panName: profile.name, pending, nextAvailableDate, candidates };
+    });
+  }, [appliedQuery.data, openData, upcomingData, profiles]);
 
   const markApplied = async (candidate: ApplyCandidate, panId: string, panName: string, lots: number) => {
     const amountBlocked =
