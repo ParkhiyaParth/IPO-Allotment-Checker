@@ -1,0 +1,25 @@
+name: Deploy mobile dev server (Expo Go preview)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/deploy-dev-server.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH in, pull latest, restart dev server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEV_SERVER_HOST }}
+          username: ${{ secrets.DEV_SERVER_USER }}
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: |
+            cd ~/IPO-Allotment-Checker
+            git pull origin main
+            cd mobile
+            npm install
+            sudo systemctl restart ipo-mobile-dev
