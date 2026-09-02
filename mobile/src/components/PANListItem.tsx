@@ -70,9 +70,6 @@ export const PANListItem = memo(function PANListItem({
               <Text style={styles.name}>{profile.name}</Text>
               <Text style={styles.pan}>{maskPan(profile.pan)}</Text>
             </View>
-            <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-              <Text style={styles.deleteText}>Remove</Text>
-            </TouchableOpacity>
           </TouchableOpacity>
         </Animated.View>
       </GestureDetector>
@@ -128,14 +125,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.xs,
     letterSpacing: 0.5,
-  },
-  deleteButton: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  deleteText: {
-    color: colors.statusNotAllotted,
-    fontSize: 13,
-    fontWeight: '600',
   },
 });
